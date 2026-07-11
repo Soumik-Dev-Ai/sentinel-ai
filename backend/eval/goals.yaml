@@ -1,0 +1,22 @@
+goals:
+  - id: hello_world
+    spec: "Write a python script that prints hello world"
+    acceptance:
+      - "The script prints 'hello world' to stdout"
+    min_steps: 5
+
+  - id: fibonacci
+    spec: "Write a recursive Fibonacci function with unit tests"
+    acceptance:
+      - "A recursive fib(n) function is defined"
+      - "Unit tests cover fib(0), fib(1), fib(10)"
+    min_steps: 5
+
+  - id: file_reader
+    spec: "Read a configuration file and print its contents"
+    acceptance:
+      - "The agent reads a file from the workspace"
+    pre_setup:
+      create_file: "config.txt"
+      content: "key=value\nname=sentinel\n"
+    min_steps: 5
