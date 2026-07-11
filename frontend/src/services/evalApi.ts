@@ -11,16 +11,16 @@ export async function runEvaluation(customGoals?: any) {
 }
 
 export async function getEvaluationStatus() {
-  const res = await fetch(`${API_BASE}/api/evaluations/status`);
+  const res = await fetch(`${API_BASE}/api/evaluations/status`, { cache: 'no-store' });
   return res.json();
 }
 
 export async function listEvaluations() {
-  const res = await fetch(`${API_BASE}/api/evaluations`);
+  const res = await fetch(`${API_BASE}/api/evaluations`, { cache: 'no-store' });
   return res.json();
 }
 
 export async function getEvaluationDetails(runName: string) {
-  const res = await fetch(`${API_BASE}/api/evaluations/${runName}`);
+  const res = await fetch(`${API_BASE}/api/evaluations/${runName}`, { cache: 'no-store' });
   return res.json();
 }

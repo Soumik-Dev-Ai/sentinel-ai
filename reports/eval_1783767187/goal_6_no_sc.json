@@ -1,0 +1,96 @@
+{
+  "goal_id": "goal_6",
+  "spec": "Write a Python script 'fetch_todo.py' that uses the 'urllib.request' module to fetch JSON data from 'https://jsonplaceholder.typicode.com/todos/1', extract the 'title', and write it to 'todo.txt'. Run the script to generate the file.",
+  "self_correction_enabled": false,
+  "success": true,
+  "steps": 1,
+  "self_corrections": 0,
+  "elapsed_seconds": 5.452431917190552,
+  "memory_dump": {
+    "run_id": "32e9ef92-9b4",
+    "goal": {
+      "id": "goal_6",
+      "spec": "Write a Python script 'fetch_todo.py' that uses the 'urllib.request' module to fetch JSON data from 'https://jsonplaceholder.typicode.com/todos/1', extract the 'title', and write it to 'todo.txt'. Run the script to generate the file.",
+      "acceptance": []
+    },
+    "plan_current": [
+      {
+        "id": "S1",
+        "desc": "Write a Python script 'fetch_todo.py' that uses the 'urllib.request' module to fetch JSON data from 'https://jsonplaceholder.typicode.com/todos/1', extract the 'title', and write it to 'todo.txt'. Run the script to generate the file.",
+        "status": "done"
+      }
+    ],
+    "steps": [
+      {
+        "ts": "2026-07-11T10:55:31.584388+00:00",
+        "step_ix": 1,
+        "thought": "",
+        "tool": "write_file",
+        "args": {
+          "raw": "{\"path\": \"fetch_todo.py\", \"content\": \"import urllib.request\\nimport json\\n\\nresponse = urllib.request.urlopen("
+        },
+        "result": {
+          "ok": false,
+          "error_type": "args_invalid",
+          "tool": "write_file",
+          "details": [
+            {
+              "type": "missing",
+              "loc": [
+                "path"
+              ],
+              "msg": "Field required",
+              "input": {
+                "raw": "{\"path\": \"fetch_todo.py\", \"content\": \"import urllib.request\\nimport json\\n\\nresponse = urllib.request.urlopen("
+              },
+              "url": "https://errors.pydantic.dev/2.12/v/missing"
+            },
+            {
+              "type": "missing",
+              "loc": [
+                "content"
+              ],
+              "msg": "Field required",
+              "input": {
+                "raw": "{\"path\": \"fetch_todo.py\", \"content\": \"import urllib.request\\nimport json\\n\\nresponse = urllib.request.urlopen("
+              },
+              "url": "https://errors.pydantic.dev/2.12/v/missing"
+            }
+          ]
+        },
+        "eval": {
+          "success": false,
+          "coherence": 0.8,
+          "plan_valid": true,
+          "mode": null,
+          "evidence": "Self-correction disabled (baseline)",
+          "goal_alignment": 0.8
+        },
+        "correction_trigger": null
+      }
+    ],
+    "corrections": [],
+    "provider_events": [
+      {
+        "ts": 1783767326.638488,
+        "from": "openrouter",
+        "to": "next",
+        "reason": "Error code: 404 - {'error': {'message': 'No endpoints found for anthropic/claude-3.5-sonnet.', 'code': 404}, 'user_id': 'user_3ELYialS3EtsrlR64uKBy1gNoid'}"
+      },
+      {
+        "ts": 1783767326.8657577,
+        "from": "groq",
+        "to": "next",
+        "reason": "Error code: 429 - {'error': {'message': 'Rate limit reached for model `llama-3.3-70b-versatile` in organization `org_01kvysb4bwemfv98v689vckj3k` service tier `on_demand` on tokens per day (TPD): Limit"
+      }
+    ],
+    "unresolvable": [],
+    "final_output": "[OK] Write a Python script 'fetch_todo.py' that uses the 'urllib.request' module to fetch JSON data from 'https://jsonplaceholder.typicode.com/todos/1', extract the 'title', and write it to 'todo.txt'. Run the script to generate the file.",
+    "metrics": {
+      "steps": 1,
+      "self_corrections": 0,
+      "provider_switches": 2,
+      "unresolvable_count": 0
+    }
+  }
+}
