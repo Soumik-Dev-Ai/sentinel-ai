@@ -8,6 +8,7 @@ export const EvaluationLab: React.FC<{ onExit?: () => void }> = ({ onExit }) => 
   const [customText, setCustomText] = useState("");
   const [inputType, setInputType] = useState<"default" | "text" | "file">("default");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const prevRunningRef = useRef(false);
 
   useEffect(() => {
     fetchReports();
@@ -27,13 +28,12 @@ export const EvaluationLab: React.FC<{ onExit?: () => void }> = ({ onExit }) => 
   const checkStatus = async () => {
     try {
       const data = await getEvaluationStatus();
-      setStatus(prevStatus => {
-        if (!data.running && prevStatus.running) {
-          // Just finished
-          fetchReports();
-        }
-        return data;
-      });
+      setStatus(data);
+      if (!data.running && prevRunningRef.current) {
+        // Just finished
+        fetchReports();
+      }
+      prevRunningRef.current = data.running;
     } catch (e) {
       console.error(e);
     }

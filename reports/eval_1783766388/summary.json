@@ -1,0 +1,179 @@
+{
+  "run_name": "eval_1783766388",
+  "timestamp": 1783766388,
+  "total_goals": 10,
+  "metrics_with_self_correction": {
+    "completion_rate": 1.0,
+    "avg_steps": 0.9,
+    "total_self_corrections": 1,
+    "avg_elapsed": 7.042887449264526
+  },
+  "metrics_baseline": {
+    "completion_rate": 1.0,
+    "avg_steps": 0.8,
+    "total_self_corrections": 0,
+    "avg_elapsed": 16.222558784484864
+  },
+  "runs": [
+    {
+      "goal_id": "goal_1",
+      "self_correction_enabled": false,
+      "success": true,
+      "steps": 1,
+      "self_corrections": 0,
+      "elapsed_seconds": 17.26
+    },
+    {
+      "goal_id": "goal_1",
+      "self_correction_enabled": true,
+      "success": true,
+      "steps": 1,
+      "self_corrections": 0,
+      "elapsed_seconds": 2.76
+    },
+    {
+      "goal_id": "goal_2",
+      "self_correction_enabled": false,
+      "success": true,
+      "steps": 1,
+      "self_corrections": 0,
+      "elapsed_seconds": 12.25
+    },
+    {
+      "goal_id": "goal_2",
+      "self_correction_enabled": true,
+      "success": true,
+      "steps": 1,
+      "self_corrections": 0,
+      "elapsed_seconds": 8.05
+    },
+    {
+      "goal_id": "goal_3",
+      "self_correction_enabled": false,
+      "success": true,
+      "steps": 0,
+      "self_corrections": 0,
+      "elapsed_seconds": 15.77
+    },
+    {
+      "goal_id": "goal_3",
+      "self_correction_enabled": true,
+      "success": true,
+      "steps": 1,
+      "self_corrections": 1,
+      "elapsed_seconds": 17.78
+    },
+    {
+      "goal_id": "goal_4",
+      "self_correction_enabled": false,
+      "success": true,
+      "steps": 1,
+      "self_corrections": 0,
+      "elapsed_seconds": 3.47
+    },
+    {
+      "goal_id": "goal_4",
+      "self_correction_enabled": true,
+      "success": true,
+      "steps": 1,
+      "self_corrections": 0,
+      "elapsed_seconds": 4.48
+    },
+    {
+      "goal_id": "goal_5",
+      "self_correction_enabled": false,
+      "success": true,
+      "steps": 1,
+      "self_corrections": 0,
+      "elapsed_seconds": 5.63
+    },
+    {
+      "goal_id": "goal_5",
+      "self_correction_enabled": true,
+      "success": true,
+      "steps": 0,
+      "self_corrections": 0,
+      "elapsed_seconds": 9.27
+    },
+    {
+      "goal_id": "goal_6",
+      "self_correction_enabled": false,
+      "success": true,
+      "steps": 1,
+      "self_corrections": 0,
+      "elapsed_seconds": 5.62
+    },
+    {
+      "goal_id": "goal_6",
+      "self_correction_enabled": true,
+      "success": true,
+      "steps": 1,
+      "self_corrections": 0,
+      "elapsed_seconds": 3.29
+    },
+    {
+      "goal_id": "goal_7",
+      "self_correction_enabled": false,
+      "success": true,
+      "steps": 0,
+      "self_corrections": 0,
+      "elapsed_seconds": 65.5
+    },
+    {
+      "goal_id": "goal_7",
+      "self_correction_enabled": true,
+      "success": true,
+      "steps": 1,
+      "self_corrections": 0,
+      "elapsed_seconds": 9.16
+    },
+    {
+      "goal_id": "goal_8",
+      "self_correction_enabled": false,
+      "success": true,
+      "steps": 1,
+      "self_corrections": 0,
+      "elapsed_seconds": 5.1
+    },
+    {
+      "goal_id": "goal_8",
+      "self_correction_enabled": true,
+      "success": true,
+      "steps": 1,
+      "self_corrections": 0,
+      "elapsed_seconds": 6.41
+    },
+    {
+      "goal_id": "goal_9",
+      "self_correction_enabled": false,
+      "success": true,
+      "steps": 1,
+      "self_corrections": 0,
+      "elapsed_seconds": 4.34
+    },
+    {
+      "goal_id": "goal_9",
+      "self_correction_enabled": true,
+      "success": true,
+      "steps": 1,
+      "self_corrections": 0,
+      "elapsed_seconds": 4.06
+    },
+    {
+      "goal_id": "goal_10",
+      "self_correction_enabled": false,
+      "success": true,
+      "steps": 1,
+      "self_corrections": 0,
+      "elapsed_seconds": 27.29
+    },
+    {
+      "goal_id": "goal_10",
+      "self_correction_enabled": true,
+      "success": true,
+      "steps": 1,
+      "self_corrections": 0,
+      "elapsed_seconds": 5.18
+    }
+  ]
+}
