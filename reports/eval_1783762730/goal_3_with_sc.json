@@ -1,0 +1,60 @@
+{
+  "goal_id": "goal_3",
+  "spec": "Use the FlakyNetTool to fetch data from 'https://example.com' and write the HTML content to 'index.html'. If it fails, retry until it succeeds.",
+  "self_correction_enabled": true,
+  "success": true,
+  "steps": 0,
+  "self_corrections": 0,
+  "elapsed_seconds": 59.77275538444519,
+  "memory_dump": {
+    "run_id": "9b03e4f6-449",
+    "goal": {
+      "id": "goal_3",
+      "spec": "Use the FlakyNetTool to fetch data from 'https://example.com' and write the HTML content to 'index.html'. If it fails, retry until it succeeds.",
+      "acceptance": []
+    },
+    "plan_current": [
+      {
+        "id": "S1",
+        "desc": "Use the FlakyNetTool to fetch data from 'https://example.com' and write the HTML content to 'index.html'. If it fails, retry until it succeeds.",
+        "status": "active"
+      }
+    ],
+    "steps": [],
+    "corrections": [],
+    "provider_events": [
+      {
+        "ts": 1783762884.1671445,
+        "from": "openrouter",
+        "to": "next",
+        "reason": "Error code: 404 - {'error': {'message': 'No endpoints found for anthropic/claude-3.5-sonnet.', 'code': 404}, 'user_id': 'user_3ELYialS3EtsrlR64uKBy1gNoid'}"
+      },
+      {
+        "ts": 1783762886.5166879,
+        "from": "groq",
+        "to": "next",
+        "reason": "Error code: 429 - {'error': {'message': 'Rate limit reached for model `llama-3.3-70b-versatile` in organization `org_01kvysb4bwemfv98v689vckj3k` service tier `on_demand` on tokens per day (TPD): Limit"
+      },
+      {
+        "ts": 1783762914.8730695,
+        "from": "openrouter",
+        "to": "next",
+        "reason": "Error code: 404 - {'error': {'message': 'No endpoints found for anthropic/claude-3.5-sonnet.', 'code': 404}, 'user_id': 'user_3ELYialS3EtsrlR64uKBy1gNoid'}"
+      },
+      {
+        "ts": 1783762915.3143978,
+        "from": "groq",
+        "to": "next",
+        "reason": "Error code: 429 - {'error': {'message': 'Rate limit reached for model `llama-3.3-70b-versatile` in organization `org_01kvysb4bwemfv98v689vckj3k` service tier `on_demand` on tokens per day (TPD): Limit"
+      }
+    ],
+    "unresolvable": [],
+    "final_output": "No action produced by LLM",
+    "metrics": {
+      "steps": 0,
+      "self_corrections": 0,
+      "provider_switches": 4,
+      "unresolvable_count": 0
+    }
+  }
+}

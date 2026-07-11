@@ -27,11 +27,13 @@ export const EvaluationLab: React.FC<{ onExit?: () => void }> = ({ onExit }) => 
   const checkStatus = async () => {
     try {
       const data = await getEvaluationStatus();
-      setStatus(data);
-      if (!data.running && status.running) {
-        // Just finished
-        fetchReports();
-      }
+      setStatus(prevStatus => {
+        if (!data.running && prevStatus.running) {
+          // Just finished
+          fetchReports();
+        }
+        return data;
+      });
     } catch (e) {
       console.error(e);
     }
