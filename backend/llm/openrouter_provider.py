@@ -10,7 +10,7 @@ class OpenRouterProvider(OpenAIProvider):
     def __init__(self, api_key: str | None = None, model: str = "anthropic/claude-3.5-sonnet"):
         self._api_key = api_key or config.OPENROUTER_API_KEY
         self._model = model
-        self._max_tokens = 2000
+        self._max_tokens = 1500
         self._client = None
         if self._api_key:
             try:

@@ -1,12 +1,15 @@
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:9000";
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 export async function runEvaluation(customGoals?: any) {
-  const options: RequestInit = { method: "POST" };
-  if (customGoals) {
-    options.headers = { "Content-Type": "application/json" };
-    options.body = JSON.stringify({ custom_goals: customGoals });
-  }
+  const options: RequestInit = { 
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ custom_goals: customGoals || null })
+  };
   const res = await fetch(`${API_BASE}/api/evaluations/run`, options);
+  if (!res.ok) {
+    throw new Error(`Server returned ${res.status}`);
+  }
   return res.json();
 }
 

@@ -75,7 +75,20 @@ const App: React.FC = () => {
             <AgentWorkspace
               goal={goal}
               inputText={inputText}
-              {...agentState}
+              terminalLines={agentState.terminalLines}
+              codeLines={agentState.codeLines}
+              liveCodeStream={agentState.liveCodeStream}
+              phase={agentState.phase}
+              finalReport={agentState.finalReport}
+              error={agentState.error}
+              metrics={agentState.metrics}
+              graphNodes={agentState.graphNodes}
+              graphEdges={agentState.graphEdges}
+              telemetry={agentState.telemetry}
+              pendingReview={agentState.pendingReview}
+              startedAt={agentState.startedAt}
+              onEscalationAnswer={agentState.sendEscalationAnswer}
+              onDismissReview={agentState.dismissReview}
             />
           </motion.div>
         )}

@@ -14,10 +14,15 @@ class _ScriptedProvider(Provider):
         self._name = name
         self._script = list(script)
         self.calls = 0
+        self._model = name + "-model"
 
     @property
     def name(self) -> str:
         return self._name
+
+    @property
+    def model(self) -> str:
+        return self._model
 
     def chat(
         self,
@@ -42,10 +47,20 @@ def _reply(text: str) -> dict[str, Any]:
     return {"thought": text, "action": {"tool": "noop", "args": {}}}
 
 
+def _router_with(*providers: Provider) -> LLMRouter:
+    """Construct a router pre-seeded with the given mock providers in the strategic tier."""
+    router = LLMRouter()
+    router._tier_providers["strategic"] = [
+        {"provider": p, "is_preferred": True, "is_free": True, "usage_count": 0}
+        for p in providers
+    ]
+    return router
+
+
 def test_fallback_chain_order() -> None:
     p1 = _ScriptedProvider("p1_slow", [RuntimeError("429")])
     p2 = _ScriptedProvider("p2_fast", [_reply("from-p2")])
-    router = LLMRouter(providers=[p1, p2])
+    router = _router_with(p1, p2)
     reply = router.chat([])
     assert reply.thought == "from-p2"
     assert p1.calls == 1 and p2.calls == 1
@@ -56,7 +71,7 @@ def test_fallback_chain_multiple_failures_continues() -> None:
     p1 = _ScriptedProvider("p1", [RuntimeError("err1")])
     p2 = _ScriptedProvider("p2", [RuntimeError("err2")])
     p3 = _ScriptedProvider("p3", [_reply("from-p3")])
-    router = LLMRouter(providers=[p1, p2, p3])
+    router = _router_with(p1, p2, p3)
     reply = router.chat([])
     assert reply.thought == "from-p3"
     assert len(router.provider_events) == 2
@@ -65,7 +80,7 @@ def test_fallback_chain_multiple_failures_continues() -> None:
 def test_provider_switches_logged_in_provider_events() -> None:
     p1 = _ScriptedProvider("p1", [RuntimeError("429")])
     p2 = _ScriptedProvider("p2", [_reply("ok")])
-    router = LLMRouter(providers=[p1, p2])
+    router = _router_with(p1, p2)
     router.chat([])
     events = router.provider_events
     assert len(events) >= 1
@@ -80,10 +95,15 @@ def test_slow_provider_times_out_and_falls_back() -> None:
         def __init__(self, name: str, delay: float) -> None:
             self._name = name
             self._delay = delay
+            self._model = name + "-model"
 
         @property
         def name(self) -> str:
             return self._name
+
+        @property
+        def model(self) -> str:
+            return self._model
 
         def chat(
             self,
@@ -100,7 +120,11 @@ def test_slow_provider_times_out_and_falls_back() -> None:
 
     fast = _ScriptedProvider("fast", [_reply("from-fast")])
     slow = _SlowProvider("slow", 5.0)
-    router = LLMRouter(providers=[slow, fast], provider_timeout=1)
+    router = LLMRouter(provider_timeout=1)
+    router._tier_providers["strategic"] = [
+        {"provider": slow, "is_preferred": True, "is_free": True, "usage_count": 0},
+        {"provider": fast, "is_preferred": True, "is_free": True, "usage_count": 0},
+    ]
     reply = router.chat([])
     assert reply.thought == "from-fast"
     events = router.provider_events
@@ -110,38 +134,46 @@ def test_slow_provider_times_out_and_falls_back() -> None:
 def test_all_providers_exhausted_raises() -> None:
     p1 = _ScriptedProvider("p1", [RuntimeError("a")])
     p2 = _ScriptedProvider("p2", [RuntimeError("b")])
-    router = LLMRouter(providers=[p1, p2])
-    with pytest.raises(RuntimeError, match="All providers exhausted"):
+    router = _router_with(p1, p2)
+    with pytest.raises(RuntimeError, match="exhausted"):
         router.chat([])
 
 
 def test_first_provider_succeeds_no_events() -> None:
     p1 = _ScriptedProvider("p1", [_reply("ok")])
     p2 = _ScriptedProvider("p2", [_reply("also-ok")])
-    router = LLMRouter(providers=[p1, p2])
+    router = _router_with(p1, p2)
     reply = router.chat([])
     assert reply.thought == "ok"
     assert len(router.provider_events) == 0
 
 
 def test_empty_provider_list_raises() -> None:
-    router = LLMRouter(providers=[])
-    with pytest.raises(RuntimeError, match="All providers exhausted"):
+    router = LLMRouter()
+    router._tier_providers["strategic"] = []
+    with pytest.raises(RuntimeError, match="exhausted"):
         router.chat([])
 
 
 def test_provider_events_empty_on_success() -> None:
     p = _ScriptedProvider("p1", [_reply("ok")])
-    router = LLMRouter(providers=[p])
+    router = _router_with(p)
     router.chat([])
     assert len(router.provider_events) == 0
 
 
 def test_chat_passes_tools_and_schema() -> None:
     class _SchemaProvider(Provider):
+        _name = "schema"
+        _model = "schema-model"
+
         @property
         def name(self) -> str:
-            return "schema"
+            return self._name
+
+        @property
+        def model(self) -> str:
+            return self._model
 
         def chat(self, messages, tools=None, response_schema=None, stream_callback=None):
             return Reply(
@@ -150,7 +182,7 @@ def test_chat_passes_tools_and_schema() -> None:
                 finish_reason="stop",
             )
 
-    router = LLMRouter(providers=[_SchemaProvider()])
+    router = _router_with(_SchemaProvider())
     reply = router.chat(
         [{"role": "user", "content": "hi"}],
         tools=[{"name": "t1", "description": "", "input_schema": {}}],

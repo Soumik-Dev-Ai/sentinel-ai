@@ -1,0 +1,60 @@
+{
+  "goal_id": "goal_1",
+  "spec": "Write a Python script 'hello.py' that prints 'Hello World'.",
+  "self_correction_enabled": true,
+  "success": true,
+  "steps": 0,
+  "self_corrections": 0,
+  "elapsed_seconds": 6.250680923461914,
+  "memory_dump": {
+    "run_id": "c3decdb1-025",
+    "goal": {
+      "id": "goal_1",
+      "spec": "Write a Python script 'hello.py' that prints 'Hello World'.",
+      "acceptance": []
+    },
+    "plan_current": [
+      {
+        "id": "S1",
+        "desc": "Write a Python script 'hello.py' that prints 'Hello World'.",
+        "status": "active"
+      }
+    ],
+    "steps": [],
+    "corrections": [],
+    "provider_events": [
+      {
+        "ts": 1784419192.3436894,
+        "from": "openrouter",
+        "to": "next",
+        "reason": "Error code: 404 - {'error': {'message': 'No endpoints found for anthropic/claude-3.5-sonnet.', 'code': 404}, 'user_id': 'user_3ELYialS3EtsrlR64uKBy1gNoid'}"
+      },
+      {
+        "ts": 1784419192.885512,
+        "from": "openrouter",
+        "to": "next",
+        "reason": "Error code: 402 - {'error': {'message': 'This request requires more credits, or fewer max_tokens. You requested up to 1500 tokens, but can only afford 1062. To increase, visit https://openrouter.ai/se"
+      },
+      {
+        "ts": 1784419195.6878326,
+        "from": "openrouter",
+        "to": "next",
+        "reason": "Error code: 404 - {'error': {'message': 'No endpoints found for anthropic/claude-3.5-sonnet.', 'code': 404}, 'user_id': 'user_3ELYialS3EtsrlR64uKBy1gNoid'}"
+      },
+      {
+        "ts": 1784419195.8286307,
+        "from": "openrouter",
+        "to": "next",
+        "reason": "Error code: 402 - {'error': {'message': 'This request requires more credits, or fewer max_tokens. You requested up to 1500 tokens, but can only afford 1062. To increase, visit https://openrouter.ai/se"
+      }
+    ],
+    "unresolvable": [],
+    "final_output": "No action produced by LLM",
+    "metrics": {
+      "steps": 0,
+      "self_corrections": 0,
+      "provider_switches": 4,
+      "unresolvable_count": 0
+    }
+  }
+}
