@@ -166,39 +166,25 @@ export const EvaluationLab: React.FC<{ onExit?: () => void }> = ({ onExit }) => 
                     <p><strong>Steps:</strong> {run.steps} | <strong>Corrections:</strong> {run.self_corrections}</p>
                     
                     <details>
-                      <summary>View Structured Multi-Agent Trace</summary>
+                      <summary>View Structured ReAct Trace</summary>
                       <div className="react-trace">
-                        {run.memory_dump?.plan?.subtasks && run.memory_dump.plan.subtasks.length > 0 ? (
-                          <>
-                            {run.memory_dump.plan.subtasks.map((st: any, idx: number) => {
-                              const outcome = run.memory_dump.subtasks?.find((r: any) => r.subtask_id === st.id);
-                              return (
-                                <div key={idx} className="trace-step" style={{ borderLeft: '3px solid #3b82f6', marginBottom: '10px' }}>
-                                  <div className="trace-thought"><strong>Subtask [{st.id}]:</strong> {st.desc}</div>
-                                  <div className="trace-action" style={{ color: '#8b5cf6' }}><strong>Agent:</strong> {st.agent}</div>
-                                  {outcome && (
-                                    <div className="trace-result" style={{ marginTop: '5px' }}>
-                                      <strong>Resolved:</strong> {outcome.resolved ? '✅ Yes' : '❌ No'} | <strong>Attempts:</strong> {outcome.attempts}
-                                    </div>
-                                  )}
-                                </div>
-                              );
-                            })}
-                            {run.memory_dump.final_output && (
-                              <div className="trace-step" style={{ borderLeft: '3px solid #22c55e', marginTop: '10px' }}>
-                                <strong style={{ color: '#22c55e' }}>Final Output:</strong>
-                                <pre style={{ whiteSpace: 'pre-wrap', background: 'rgba(0,0,0,0.2)', padding: '10px', marginTop: '8px', borderRadius: '4px', fontSize: '0.9em' }}>
-                                  {run.memory_dump.final_output}
-                                </pre>
-                              </div>
-                            )}
-                          </>
+                        {run.memory_dump?.steps && run.memory_dump.steps.length > 0 ? (
+                          run.memory_dump.steps.map((step: any, idx: number) => (
+                            <div key={idx} className="trace-step">
+                              <div className="trace-thought"><strong>Think:</strong> {step.thought}</div>
+                              <div className="trace-action"><strong>Act:</strong> {step.tool}({JSON.stringify(step.args)})</div>
+                              <div className="trace-result"><strong>Observe:</strong> {JSON.stringify(step.result).substring(0, 200)}...</div>
+                              {step.correction_trigger && (
+                                <div className="trace-correction"><strong>Correction Triggered:</strong> {step.correction_trigger}</div>
+                              )}
+                            </div>
+                          ))
                         ) : (
                           <div style={{ padding: '10px', color: 'rgba(255,255,255,0.5)', fontStyle: 'italic', textAlign: 'center' }}>
                             {run.memory_dump?.final_output ? (
-                              <span style={{ color: '#ef4444' }}><strong>Error / Output:</strong> {run.memory_dump.final_output}</span>
+                              <span style={{ color: '#ef4444' }}><strong>Error:</strong> {run.memory_dump.final_output}</span>
                             ) : (
-                              "No trace available for this run."
+                              "No ReAct trace available for this run."
                             )}
                           </div>
                         )}
