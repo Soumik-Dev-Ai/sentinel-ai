@@ -398,14 +398,26 @@ async def ws_run(websocket: WebSocket) -> None:
 
 
 EVAL_DIR = Path("reports")
-eval_state = {
-    "running": False,
-    "progress": 0,
-    "total": 0,
-    "current_goal": "",
-    "sc_enabled": False,
-    "last_result": None
-}
+EVAL_STATE_FILE = EVAL_DIR / "eval_state.json"
+
+def get_shared_eval_state():
+    if EVAL_STATE_FILE.exists():
+        try:
+            return json.loads(EVAL_STATE_FILE.read_text())
+        except Exception:
+            pass
+    return {
+        "running": False,
+        "progress": 0,
+        "total": 0,
+        "current_goal": "",
+        "sc_enabled": False,
+        "last_result": None
+    }
+
+def save_shared_eval_state(state):
+    EVAL_DIR.mkdir(parents=True, exist_ok=True)
+    EVAL_STATE_FILE.write_text(json.dumps(state))
 
 from pydantic import BaseModel
 from typing import Optional
@@ -415,39 +427,53 @@ class RunEvalRequest(BaseModel):
 
 @app.post("/api/evaluations/run")
 def start_evaluation(req: RunEvalRequest = None) -> dict[str, Any]:
-    if eval_state["running"]:
+    state = get_shared_eval_state()
+    if state["running"]:
         return {"status": "error", "message": "Evaluation already running"}
     
-    eval_state["running"] = True
-    eval_state["progress"] = 0
-    eval_state["total"] = 0
-    eval_state["current_goal"] = ""
-    eval_state["sc_enabled"] = False
+    state.update({
+        "running": True,
+        "progress": 0,
+        "total": 0,
+        "current_goal": "",
+        "sc_enabled": False,
+        "last_result": None
+    })
+    save_shared_eval_state(state)
     
     custom_goals = req.custom_goals if req else None
     
     def _progress(current: int, total: int, goal_id: str, sc_enabled: bool) -> None:
-        eval_state["progress"] = current
-        eval_state["total"] = total
-        eval_state["current_goal"] = goal_id
-        eval_state["sc_enabled"] = sc_enabled
+        curr_state = get_shared_eval_state()
+        curr_state.update({
+            "progress": current,
+            "total": total,
+            "current_goal": goal_id,
+            "sc_enabled": sc_enabled
+        })
+        save_shared_eval_state(curr_state)
         
     def _run_task() -> None:
         try:
             from backend.eval_suite import run_evaluation_suite
             result = run_evaluation_suite(EVAL_DIR, on_progress=_progress, custom_goals=custom_goals)
-            eval_state["last_result"] = result
+            
+            final_state = get_shared_eval_state()
+            final_state["last_result"] = result
+            final_state["running"] = False
+            save_shared_eval_state(final_state)
         except Exception as e:
-            eval_state["last_result"] = {"error": str(e), "trace": traceback.format_exc()}
-        finally:
-            eval_state["running"] = False
+            final_state = get_shared_eval_state()
+            final_state["last_result"] = {"error": str(e), "trace": traceback.format_exc()}
+            final_state["running"] = False
+            save_shared_eval_state(final_state)
 
     EXECUTOR.submit(_run_task)
     return {"status": "started"}
 
 @app.get("/api/evaluations/status")
 def get_evaluation_status() -> dict[str, Any]:
-    return eval_state
+    return get_shared_eval_state()
 
 @app.get("/api/evaluations")
 def list_evaluations() -> list[dict[str, Any]]:
