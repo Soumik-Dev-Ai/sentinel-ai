@@ -5,15 +5,9 @@ import time
 from pathlib import Path
 from tempfile import mkdtemp
 from typing import Any
+import concurrent.futures
 
-from backend.ai_agent.runner import AgentRunner
-from backend.ai_agent.working_memory import Goal
-from backend.llm.router import LLMRouter
-from backend.tools.code_exec import RunPythonTool
-from backend.tools.file_io import ReadFileTool, WriteFileTool
-from backend.tools.flaky_net import FlakyNetTool
-from backend.tools.spec_check import SpecCheckTool
-from backend.tools.test_run import RunTestsTool
+from backend.orchestrator.pipeline import MultiAgentPipeline
 
 EVAL_GOALS = [
     {
@@ -78,67 +72,86 @@ def run_evaluation_suite(report_dir: Path | str, on_progress: Any = None, custom
     run_dir.mkdir()
     
     results = []
-    
     goals_to_run = custom_goals if custom_goals else EVAL_GOALS
-    
     total_runs = len(goals_to_run) * 2
-    current_run = 0
     
-    for goal_data in goals_to_run:
-        for self_correction_enabled in [False, True]:
-            current_run += 1
-            if on_progress:
-                on_progress(current_run, total_runs, goal_data["id"], self_correction_enabled)
-                
-            workspace = Path(mkdtemp(prefix=f"eval_ws_{goal_data['id']}_"))
-            if goal_data["input"]:
-                (workspace / "input.txt").write_text(goal_data["input"], encoding="utf-8")
-                
-            tools = [
-                ReadFileTool(workspace), WriteFileTool(workspace),
-                RunPythonTool(workspace), RunTestsTool(workspace),
-                SpecCheckTool(workspace), FlakyNetTool(),
-            ]
-            router = LLMRouter()
-            runner = AgentRunner(
-                router=router, 
-                tools=tools,
-                self_correction_enabled=self_correction_enabled,
-                callbacks={}
-            )
+    completed_runs = [0]  # List so it can be mutated inside worker threads
+    
+    def run_single_eval(goal_data: dict[str, Any], self_correction_enabled: bool) -> dict[str, Any]:
+        workspace = Path(mkdtemp(prefix=f"eval_ws_{goal_data['id']}_"))
+        if goal_data["input"]:
+            (workspace / "input.txt").write_text(goal_data["input"], encoding="utf-8")
             
+        pipeline_config = {
+            "max_retries_per_subtask": 3 if self_correction_enabled else 0,
+        }
+        
+        try:
+            pipeline = MultiAgentPipeline(config=pipeline_config)
             start_time = time.time()
-            memory = runner.run(Goal(id=goal_data["id"], spec=goal_data["spec"], acceptance=[]), [goal_data["spec"]])
+            result = pipeline.run(goal=goal_data["spec"], acceptance=[], workspace=workspace, input_text=goal_data["input"])
             elapsed = time.time() - start_time
             
-            metrics = memory.to_metrics()
-            
-            # More robust check for success: 
-            has_error_output = memory.final_output and (
-                "No action produced by LLM" in memory.final_output or 
-                "Agent crashed" in memory.final_output
-            )
-            took_steps = len(memory.executed) > 0
-            
-            success = bool(memory.final_output) and not memory.unresolvable and not has_error_output and took_steps
+            success = result.get("success", False)
+            metrics = result.get("metrics", {})
+            steps = result.get("steps_taken", 0)
+            self_corrections = result.get("self_corrections", 0)
             
             run_result = {
                 "goal_id": goal_data["id"],
                 "spec": goal_data["spec"],
                 "self_correction_enabled": self_correction_enabled,
                 "success": success,
-                "steps": metrics.get("steps", 0),
-                "self_corrections": metrics.get("self_corrections", 0),
+                "steps": steps,
+                "self_corrections": self_corrections,
                 "elapsed_seconds": elapsed,
-                "memory_dump": memory.to_dict()
+                "memory_dump": {
+                    "final_output": result.get("final_output"),
+                    "plan": result.get("plan"),
+                    "subtasks": result.get("subtasks"),
+                    "metrics": metrics
+                }
             }
-            results.append(run_result)
+        except Exception as e:
+            run_result = {
+                "goal_id": goal_data["id"],
+                "spec": goal_data["spec"],
+                "self_correction_enabled": self_correction_enabled,
+                "success": False,
+                "steps": 0,
+                "self_corrections": 0,
+                "elapsed_seconds": 0,
+                "memory_dump": {
+                    "final_output": f"Agent crashed: {type(e).__name__}: {e}",
+                    "plan": {},
+                    "subtasks": [],
+                    "metrics": {}
+                }
+            }
             
-            # Save individual trace
-            mode_str = "with_sc" if self_correction_enabled else "no_sc"
-            trace_path = run_dir / f"{goal_data['id']}_{mode_str}.json"
-            trace_path.write_text(json.dumps(run_result, indent=2))
+        # Save individual trace
+        mode_str = "with_sc" if self_correction_enabled else "no_sc"
+        trace_path = run_dir / f"{goal_data['id']}_{mode_str}.json"
+        trace_path.write_text(json.dumps(run_result, indent=2))
+        
+        return run_result
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+        futures = []
+        for goal_data in goals_to_run:
+            for sc in [False, True]:
+                futures.append(executor.submit(run_single_eval, goal_data, sc))
+                
+        for future in concurrent.futures.as_completed(futures):
+            res = future.result()
+            results.append(res)
+            completed_runs[0] += 1
+            if on_progress:
+                on_progress(completed_runs[0], total_runs, res["goal_id"], res["self_correction_enabled"])
             
+    # Sort results to maintain deterministic ordering
+    results.sort(key=lambda r: (r["goal_id"], r["self_correction_enabled"]))
+    
     # Calculate aggregate metrics
     sc_results = [r for r in results if r["self_correction_enabled"]]
     base_results = [r for r in results if not r["self_correction_enabled"]]
