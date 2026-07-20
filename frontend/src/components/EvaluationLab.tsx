@@ -32,10 +32,14 @@ export const EvaluationLab: React.FC<{ onExit?: () => void }> = ({ onExit }) => 
       setStatus(data);
       if (!data.running && prevRunningRef.current) {
         // Just finished
-        const updatedReports = await listEvaluations();
-        setReports(updatedReports);
-        if (updatedReports.length > 0) {
-          setFinishedRun(updatedReports[0].run_name);
+        if (data.last_result?.error) {
+           alert(`Evaluation crashed on the backend: ${data.last_result.error}`);
+        } else {
+           const updatedReports = await listEvaluations();
+           setReports(updatedReports);
+           if (updatedReports.length > 0) {
+             setFinishedRun(updatedReports[0].run_name);
+           }
         }
       }
       prevRunningRef.current = data.running;
