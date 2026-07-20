@@ -107,26 +107,7 @@ export const EvaluationLab: React.FC<{ onExit?: () => void }> = ({ onExit }) => 
       </div>
 
       <div className="eval-content">
-        <div className="eval-sidebar">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-            <h3 style={{ margin: 0 }}>Past Reports</h3>
-            <button 
-              onClick={() => setSelectedReport(null)}
-              style={{ background: 'transparent', border: '1px solid #22c55e', color: '#22c55e', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer', fontSize: '0.8rem' }}
-            >
-              + New
-            </button>
-          </div>
-          {reports.map((r) => (
-            <div 
-              key={r.run_name} 
-              className={`report-item ${selectedReport?.run_name === r.run_name ? 'active' : ''}`}
-              onClick={() => handleSelectReport(r.run_name)}
-            >
-              Report: {new Date(r.timestamp * 1000).toLocaleString()}
-            </div>
-          ))}
-        </div>
+
 
         <div className="eval-main">
           {selectedReport ? (
