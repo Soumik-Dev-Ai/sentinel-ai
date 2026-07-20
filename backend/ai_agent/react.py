@@ -40,7 +40,15 @@ def build_system_prompt(memory: WorkingMemory, tools: list[ToolProtocol]) -> str
         f"1. THINK: Explain your reasoning about what to do next and why.\n"
         f"2. ACT: Call exactly one tool to execute your action.\n\n"
         f"CRITICAL: If you are generating or editing code, you MUST use the write_file tool to save it to the workspace. DO NOT output the raw code directly in your thought message!\n"
-        f"IMPORTANT: You must use the provided tool calling API to perform your action. Do NOT output a JSON block for the action. Just write your thoughts and then call a tool!\n"
+        f"IMPORTANT: You MUST format your entire response as a single, valid JSON block containing 'thought' and 'action' keys. Do NOT use native tool calling APIs, just output the JSON block.\n"
+        f"Example:\n"
+        f"{{\n"
+        f"  \"thought\": \"I need to read the file first to understand the codebase.\",\n"
+        f"  \"action\": {{\n"
+        f"    \"tool\": \"ReadFileTool\",\n"
+        f"    \"args\": {{\"file_path\": \"main.py\"}}\n"
+        f"  }}\n"
+        f"}}\n"
         f"If you cannot determine the right action, use read_file to explore first.\n"
     )
 
@@ -101,8 +109,8 @@ def react_step(
     if reply.action is None:
         raw_output = (reply.thought or "").strip()
         retry_msg = (
-            "You did NOT provide a valid tool call. You MUST choose exactly one tool "
-            f"from [{', '.join(t.name for t in tools)}] and call it using the tool calling API.\n"
+            "You did NOT provide a valid tool call. You MUST format your response as a valid JSON block containing 'thought' and 'action' keys.\n"
+            f"Available tools: [{', '.join(t.name for t in tools)}]\n"
             "Your previous output could not be parsed into an action. Here it is so you can fix it:\n"
             f"---\n{raw_output}\n---"
         )
