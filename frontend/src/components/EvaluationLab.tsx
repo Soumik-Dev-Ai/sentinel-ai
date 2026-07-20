@@ -181,7 +181,11 @@ export const EvaluationLab: React.FC<{ onExit?: () => void }> = ({ onExit }) => 
                           ))
                         ) : (
                           <div style={{ padding: '10px', color: 'rgba(255,255,255,0.5)', fontStyle: 'italic', textAlign: 'center' }}>
-                            No ReAct trace available for this run.
+                            {run.memory_dump?.final_output ? (
+                              <span style={{ color: '#ef4444' }}><strong>Error:</strong> {run.memory_dump.final_output}</span>
+                            ) : (
+                              "No ReAct trace available for this run."
+                            )}
                           </div>
                         )}
                       </div>
