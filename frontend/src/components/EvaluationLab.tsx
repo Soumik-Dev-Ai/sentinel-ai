@@ -9,6 +9,7 @@ export const EvaluationLab: React.FC<{ onExit?: () => void }> = ({ onExit }) => 
   const [inputType, setInputType] = useState<"default" | "text" | "file">("default");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const prevRunningRef = useRef(false);
+  const [finishedRun, setFinishedRun] = useState<string | null>(null);
 
   useEffect(() => {
     fetchReports();
@@ -31,7 +32,11 @@ export const EvaluationLab: React.FC<{ onExit?: () => void }> = ({ onExit }) => 
       setStatus(data);
       if (!data.running && prevRunningRef.current) {
         // Just finished
-        fetchReports();
+        const updatedReports = await listEvaluations();
+        setReports(updatedReports);
+        if (updatedReports.length > 0) {
+          setFinishedRun(updatedReports[0].run_name);
+        }
       }
       prevRunningRef.current = data.running;
     } catch (e) {
@@ -57,6 +62,7 @@ export const EvaluationLab: React.FC<{ onExit?: () => void }> = ({ onExit }) => 
       }
       
       await runEvaluation(customGoals);
+      setFinishedRun(null);
       checkStatus();
       setCustomText("");
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -69,7 +75,9 @@ export const EvaluationLab: React.FC<{ onExit?: () => void }> = ({ onExit }) => 
   const handleSelectReport = async (runName: string) => {
     try {
       const details = await getEvaluationDetails(runName);
+      
       setSelectedReport(details);
+      setFinishedRun(null);
     } catch (e) {
       console.error(e);
     }
@@ -119,7 +127,15 @@ export const EvaluationLab: React.FC<{ onExit?: () => void }> = ({ onExit }) => 
         <div className="eval-main">
           {selectedReport ? (
             <div className="report-details">
-              <h3>Evaluation Report: {selectedReport.run_name}</h3>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '20px' }}>
+                <button 
+                  onClick={() => { setSelectedReport(null); setFinishedRun(null); }}
+                  style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.2)', color: 'white', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer' }}
+                >
+                  &larr; Back to Evaluation Lab
+                </button>
+                <h3 style={{ margin: 0 }}>Evaluation Report: {selectedReport.run_name}</h3>
+              </div>
               
               <div className="metrics-grid">
                 <div className="metric-card">
@@ -142,30 +158,48 @@ export const EvaluationLab: React.FC<{ onExit?: () => void }> = ({ onExit }) => 
                   <div key={i} className={`run-card ${run.success ? 'success' : 'fail'}`}>
                     <h5>{run.goal_id} - {run.self_correction_enabled ? 'Agent (SC)' : 'Baseline'}</h5>
                     <p><strong>Goal:</strong> {run.spec}</p>
-                    <p><strong>Status:</strong> {run.success ? 'âœ… Success' : 'âŒ Failed'}</p>
+                    <p><strong>Status:</strong> {run.success ? '✅ Success' : '❌ Failed'}</p>
                     <p><strong>Steps:</strong> {run.steps} | <strong>Corrections:</strong> {run.self_corrections}</p>
                     
                     <details>
                       <summary>View Structured ReAct Trace</summary>
                       <div className="react-trace">
-                        {run.memory_dump?.steps?.map((step: any, idx: number) => (
-                          <div key={idx} className="trace-step">
-                            <div className="trace-thought"><strong>Think:</strong> {step.thought}</div>
-                            <div className="trace-action"><strong>Act:</strong> {step.tool}({JSON.stringify(step.args)})</div>
-                            <div className="trace-result"><strong>Observe:</strong> {JSON.stringify(step.result).substring(0, 200)}...</div>
-                            {step.correction_trigger && (
-                              <div className="trace-correction"><strong>Correction Triggered:</strong> {step.correction_trigger}</div>
-                            )}
+                        {run.memory_dump?.steps && run.memory_dump.steps.length > 0 ? (
+                          run.memory_dump.steps.map((step: any, idx: number) => (
+                            <div key={idx} className="trace-step">
+                              <div className="trace-thought"><strong>Think:</strong> {step.thought}</div>
+                              <div className="trace-action"><strong>Act:</strong> {step.tool}({JSON.stringify(step.args)})</div>
+                              <div className="trace-result"><strong>Observe:</strong> {JSON.stringify(step.result).substring(0, 200)}...</div>
+                              {step.correction_trigger && (
+                                <div className="trace-correction"><strong>Correction Triggered:</strong> {step.correction_trigger}</div>
+                              )}
+                            </div>
+                          ))
+                        ) : (
+                          <div style={{ padding: '10px', color: 'rgba(255,255,255,0.5)', fontStyle: 'italic', textAlign: 'center' }}>
+                            No ReAct trace available for this run.
                           </div>
-                        ))}
+                        )}
                       </div>
                     </details>
                   </div>
                 ))}
               </div>
             </div>
+          ) : finishedRun ? (
+            <div className="eval-setup" style={{ display: 'flex', flexDirection: 'column', gap: '20px', maxWidth: '600px', margin: '0 auto', marginTop: '100px', textAlign: 'center' }}>
+              <h3 style={{ fontSize: '1.5rem', color: '#22c55e', margin: 0 }}>Evaluation test is completed</h3>
+              <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px' }}>
+                <button 
+                  onClick={() => handleSelectReport(finishedRun)} 
+                  style={{ background: '#22c55e', color: 'black', border: 'none', padding: '12px 24px', borderRadius: '6px', cursor: 'pointer', fontSize: '1.1rem', fontWeight: 'bold' }}
+                >
+                  Show Result
+                </button>
+              </div>
+            </div>
           ) : (
-                    <div className="eval-setup" style={{ display: 'flex', flexDirection: 'column', gap: '20px', maxWidth: '600px', margin: '0 auto', marginTop: '50px' }}>
+            <div className="eval-setup" style={{ display: 'flex', flexDirection: 'column', gap: '20px', maxWidth: '600px', margin: '0 auto', marginTop: '50px' }}>
               <h3 style={{ fontSize: '1.5rem', color: '#22c55e', margin: 0 }}>Start a New Evaluation</h3>
               
               <div style={{ display: 'flex', gap: '10px', paddingBottom: '10px', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>

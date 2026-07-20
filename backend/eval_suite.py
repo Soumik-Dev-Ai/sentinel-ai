@@ -113,8 +113,14 @@ def run_evaluation_suite(report_dir: Path | str, on_progress: Any = None, custom
             
             metrics = memory.to_metrics()
             
-            # Simple check for success: the final output is populated and no unresolvable tasks.
-            success = bool(memory.final_output) and not memory.unresolvable
+            # More robust check for success: 
+            has_error_output = memory.final_output and (
+                "No action produced by LLM" in memory.final_output or 
+                "Agent crashed" in memory.final_output
+            )
+            took_steps = len(memory.executed) > 0
+            
+            success = bool(memory.final_output) and not memory.unresolvable and not has_error_output and took_steps
             
             run_result = {
                 "goal_id": goal_data["id"],
