@@ -1,0 +1,87 @@
+{
+  "goal_id": "goal_3",
+  "spec": "Use the FlakyNetTool to fetch data from 'https://example.com' and write the HTML content to 'index.html'. If it fails, retry until it succeeds.",
+  "self_correction_enabled": false,
+  "success": true,
+  "steps": 1,
+  "self_corrections": 0,
+  "elapsed_seconds": 3.490774393081665,
+  "memory_dump": {
+    "run_id": "302eb52a-2c7",
+    "goal": {
+      "id": "goal_3",
+      "spec": "Use the FlakyNetTool to fetch data from 'https://example.com' and write the HTML content to 'index.html'. If it fails, retry until it succeeds.",
+      "acceptance": []
+    },
+    "plan_current": [
+      {
+        "id": "S1",
+        "desc": "Use the FlakyNetTool to fetch data from 'https://example.com' and write the HTML content to 'index.html'. If it fails, retry until it succeeds.",
+        "status": "done"
+      }
+    ],
+    "steps": [
+      {
+        "ts": "2026-07-20T18:47:28.518986+00:00",
+        "step_ix": 1,
+        "thought": "I will use the FlakyNetTool to fetch the HTML content from the provided URL and write it to 'index.html'. This tool is designed to handle network requests that may be flaky or unreliable, ensuring that the data is retrieved successfully.",
+        "tool": "flaky_net",
+        "args": {
+          "url": "https://example.com",
+          "output_file": "index.html"
+        },
+        "result": {
+          "ok": false,
+          "error_type": "args_invalid",
+          "tool": "flaky_net",
+          "details": [
+            {
+              "type": "missing",
+              "loc": [
+                "package"
+              ],
+              "msg": "Field required",
+              "input": {
+                "url": "https://example.com",
+                "output_file": "index.html"
+              },
+              "url": "https://errors.pydantic.dev/2.12/v/missing"
+            }
+          ]
+        },
+        "eval": {
+          "success": false,
+          "coherence": 0.8,
+          "plan_valid": true,
+          "mode": null,
+          "evidence": "Self-correction disabled (baseline)",
+          "goal_alignment": 0.8
+        },
+        "correction_trigger": null
+      }
+    ],
+    "corrections": [],
+    "provider_events": [
+      {
+        "ts": 1784573245.261394,
+        "from": "openrouter",
+        "to": "next",
+        "reason": "Error code: 404 - {'error': {'message': 'No endpoints found for anthropic/claude-3.5-sonnet.', 'code': 404}, 'user_id': 'user_3ELYialS3EtsrlR64uKBy1gNoid'}"
+      },
+      {
+        "ts": 1784573245.475979,
+        "from": "openrouter",
+        "to": "next",
+        "reason": "Error code: 402 - {'error': {'message': 'This request requires more credits, or fewer max_tokens. You requested up to 1500 tokens, but can only afford 1013. To increase, visit https://openrouter.ai/se"
+      }
+    ],
+    "unresolvable": [],
+    "final_output": "[OK] Use the FlakyNetTool to fetch data from 'https://example.com' and write the HTML content to 'index.html'. If it fails, retry until it succeeds.",
+    "metrics": {
+      "steps": 1,
+      "self_corrections": 0,
+      "provider_switches": 2,
+      "unresolvable_count": 0
+    }
+  }
+}

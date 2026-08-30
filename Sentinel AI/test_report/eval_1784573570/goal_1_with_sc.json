@@ -1,0 +1,170 @@
+{
+  "goal_id": "goal_1",
+  "spec": "Write a Python script hello.py that prints hello",
+  "self_correction_enabled": true,
+  "success": true,
+  "steps": 3,
+  "self_corrections": 0,
+  "elapsed_seconds": 47.30863571166992,
+  "memory_dump": {
+    "final_output": "Sentinel AI 2.0 \u2014 Multi-Agent Run Report\n============================================================\nGoal: Write a Python script hello.py that prints hello\nChosen plan: P1 (confidence=0.95)\n\nSubtasks:\n  [OK]   S1 (coder) attempts=1:\n        file: hello.py\n        stdout preview: hello\n\n  [OK]   S2 (coder) attempts=2:\n        file: main.py\n        stdout preview: hello\n\n  [OK]   S3 (executor) attempts=1:\n        file: main.py\n        stdout preview: hello\n\n\nGenerated Code:\n------------------------------------------------------------\n\n#### hello.py\n```python\n# This script prints 'hello' to the console\nprint('hello')\n\n```\n\n#### main.py\n```python\n# Print 'hello' to the console\nprint('hello')\n\n```",
+    "plan": {
+      "chosen_path": {
+        "id": "P1",
+        "description": "Print 'hello' to the console",
+        "steps": [
+          "Create a Python script named 'hello.py'",
+          "Write a single line of code to print the string 'hello' to the console"
+        ],
+        "confidence": 0.95,
+        "rationale": "A simple and direct approach to achieve the goal.",
+        "risks": []
+      },
+      "all_paths": [
+        {
+          "id": "P1",
+          "description": "Print 'hello' to the console",
+          "steps": [
+            "Create a Python script named 'hello.py'",
+            "Write a single line of code to print the string 'hello' to the console"
+          ],
+          "confidence": 0.95,
+          "rationale": "A simple and direct approach to achieve the goal.",
+          "risks": []
+        },
+        {
+          "id": "P2",
+          "description": "Print a personalized greeting",
+          "steps": [
+            "Create 'hello.py'",
+            "Import the 'datetime' module",
+            "Use the current time to determine the time of day (morning, afternoon, evening)",
+            "Print a greeting based on the time of day, e.g., 'Good morning!'"
+          ],
+          "confidence": 0.8,
+          "rationale": "Adds a personalized touch, but requires additional logic.",
+          "risks": [
+            "Might need to handle time-related edge cases."
+          ]
+        },
+        {
+          "id": "P3",
+          "description": "Print a random greeting",
+          "steps": [
+            "Create the script",
+            "Import the 'random' module",
+            "Define a list of greetings",
+            "Use the 'choice' function to randomly select and print a greeting"
+          ],
+          "confidence": 0.75,
+          "rationale": "Provides variety in greetings, but adds complexity.",
+          "risks": [
+            "Randomness might lead to unexpected output."
+          ]
+        }
+      ],
+      "subtasks": [
+        {
+          "id": "S1",
+          "desc": "Create a Python script named 'hello.py'",
+          "agent": "coder",
+          "model_tier": "coding"
+        },
+        {
+          "id": "S2",
+          "desc": "Write a single line of code to print 'hello' to the console",
+          "agent": "coder",
+          "model_tier": "coding"
+        },
+        {
+          "id": "S3",
+          "desc": "Run the 'hello.py' script",
+          "agent": "executor",
+          "model_tier": "fast_eval"
+        }
+      ]
+    },
+    "subtasks": [
+      {
+        "subtask_id": "S1",
+        "agent": "coder",
+        "resolved": true,
+        "outcome": {
+          "ok": true,
+          "filename": "hello.py",
+          "exit_code": 0,
+          "stdout": "hello\n",
+          "stderr": "",
+          "parsed_traceback": null,
+          "success": true,
+          "node_id": "S1_exec_1"
+        },
+        "attempts": 1
+      },
+      {
+        "subtask_id": "S2",
+        "agent": "coder",
+        "resolved": true,
+        "outcome": {
+          "ok": true,
+          "filename": "main.py",
+          "exit_code": 0,
+          "stdout": "hello\n",
+          "stderr": "",
+          "parsed_traceback": null,
+          "success": true,
+          "node_id": "S2_exec_2"
+        },
+        "attempts": 2
+      },
+      {
+        "subtask_id": "S3",
+        "agent": "executor",
+        "resolved": true,
+        "outcome": {
+          "ok": true,
+          "filename": "main.py",
+          "exit_code": 0,
+          "stdout": "hello\n",
+          "stderr": "",
+          "parsed_traceback": null,
+          "success": true,
+          "node_id": "S3_exec"
+        },
+        "attempts": 1
+      }
+    ],
+    "metrics": {
+      "elapsed_seconds": 33.57,
+      "tokens_input": 4072,
+      "tokens_output": 724,
+      "tokens_total": 4796,
+      "cost_total_usd": 0.006244,
+      "calls": 8,
+      "budget_remaining_tokens": 195204,
+      "budget_remaining_usd": 4.993756,
+      "per_agent": {
+        "orchestrator": {
+          "input_tokens": 636,
+          "output_tokens": 486,
+          "cost_usd": 0.002094,
+          "calls": 2
+        },
+        "coder": {
+          "input_tokens": 2588,
+          "output_tokens": 119,
+          "cost_usd": 0.002945,
+          "calls": 3
+        },
+        "critic": {
+          "input_tokens": 848,
+          "output_tokens": 119,
+          "cost_usd": 0.001205,
+          "calls": 3
+        }
+      },
+      "provider_switches": 4,
+      "memory_entries": 23
+    }
+  }
+}

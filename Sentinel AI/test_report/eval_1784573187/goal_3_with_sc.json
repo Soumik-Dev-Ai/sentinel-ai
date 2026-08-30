@@ -1,0 +1,324 @@
+{
+  "goal_id": "goal_3",
+  "spec": "Use the FlakyNetTool to fetch data from 'https://example.com' and write the HTML content to 'index.html'. If it fails, retry until it succeeds.",
+  "self_correction_enabled": true,
+  "success": false,
+  "steps": 5,
+  "self_corrections": 4,
+  "elapsed_seconds": 10.604902982711792,
+  "memory_dump": {
+    "run_id": "485ac1e5-35e",
+    "goal": {
+      "id": "goal_3",
+      "spec": "Use the FlakyNetTool to fetch data from 'https://example.com' and write the HTML content to 'index.html'. If it fails, retry until it succeeds.",
+      "acceptance": []
+    },
+    "plan_current": [
+      {
+        "id": "S1",
+        "desc": "Use the FlakyNetTool to fetch data from 'https://example.com' and write the HTML content to 'index.html'. If it fails, retry until it succeeds.",
+        "status": "unresolvable"
+      }
+    ],
+    "steps": [
+      {
+        "ts": "2026-07-20T18:47:35.498180+00:00",
+        "step_ix": 1,
+        "thought": "I will use the FlakyNetTool to fetch data from the provided URL and write the HTML content to 'index.html'. This tool is designed to handle network requests that might be flaky or unreliable, ensuring data retrieval even in challenging network conditions.",
+        "tool": "flaky_net",
+        "args": {
+          "url": "https://example.com",
+          "output_file": "index.html"
+        },
+        "result": {
+          "ok": false,
+          "error_type": "args_invalid",
+          "tool": "flaky_net",
+          "details": [
+            {
+              "type": "missing",
+              "loc": [
+                "package"
+              ],
+              "msg": "Field required",
+              "input": {
+                "url": "https://example.com",
+                "output_file": "index.html"
+              },
+              "url": "https://errors.pydantic.dev/2.12/v/missing"
+            }
+          ]
+        },
+        "eval": {
+          "success": false,
+          "coherence": 0.2,
+          "plan_valid": true,
+          "mode": "F1",
+          "evidence": "Tool flaky_net failed (args_invalid)",
+          "goal_alignment": 0.2
+        },
+        "correction_trigger": null
+      },
+      {
+        "ts": "2026-07-20T18:47:35.498180+00:00",
+        "step_ix": 2,
+        "thought": "[recovery re-invoke] tool_failure",
+        "tool": "flaky_net",
+        "args": {
+          "url": "https://example.com",
+          "output_file": "index.html",
+          "timeout": 60
+        },
+        "result": {
+          "ok": false,
+          "error_type": "args_invalid",
+          "tool": "flaky_net",
+          "details": [
+            {
+              "type": "missing",
+              "loc": [
+                "package"
+              ],
+              "msg": "Field required",
+              "input": {
+                "url": "https://example.com",
+                "output_file": "index.html",
+                "timeout": 60
+              },
+              "url": "https://errors.pydantic.dev/2.12/v/missing"
+            }
+          ]
+        },
+        "eval": {
+          "success": false,
+          "coherence": 0.2,
+          "plan_valid": true,
+          "mode": "F1",
+          "evidence": "Tool flaky_net failed (args_invalid)",
+          "goal_alignment": 0.2
+        },
+        "correction_trigger": "F1"
+      },
+      {
+        "ts": "2026-07-20T18:47:38.999219+00:00",
+        "step_ix": 3,
+        "thought": "I will use the FlakyNetTool again with a longer timeout of 120 seconds to ensure a successful connection and data retrieval. This should allow enough time for the operation to complete, especially if the network is slow or the server is responding slowly.",
+        "tool": "flaky_net",
+        "args": {
+          "url": "https://example.com",
+          "output_file": "index.html",
+          "timeout": 120
+        },
+        "result": {
+          "ok": false,
+          "error_type": "args_invalid",
+          "tool": "flaky_net",
+          "details": [
+            {
+              "type": "missing",
+              "loc": [
+                "package"
+              ],
+              "msg": "Field required",
+              "input": {
+                "url": "https://example.com",
+                "output_file": "index.html",
+                "timeout": 120
+              },
+              "url": "https://errors.pydantic.dev/2.12/v/missing"
+            }
+          ]
+        },
+        "eval": {
+          "success": false,
+          "coherence": 0.2,
+          "plan_valid": true,
+          "mode": "F1",
+          "evidence": "Tool flaky_net failed (args_invalid)",
+          "goal_alignment": 0.2
+        },
+        "correction_trigger": null
+      },
+      {
+        "ts": "2026-07-20T18:47:38.999219+00:00",
+        "step_ix": 4,
+        "thought": "[recovery re-invoke] tool_failure",
+        "tool": "flaky_net",
+        "args": {
+          "url": "https://example.com",
+          "output_file": "index.html",
+          "timeout": 60
+        },
+        "result": {
+          "ok": false,
+          "error_type": "args_invalid",
+          "tool": "flaky_net",
+          "details": [
+            {
+              "type": "missing",
+              "loc": [
+                "package"
+              ],
+              "msg": "Field required",
+              "input": {
+                "url": "https://example.com",
+                "output_file": "index.html",
+                "timeout": 60
+              },
+              "url": "https://errors.pydantic.dev/2.12/v/missing"
+            }
+          ]
+        },
+        "eval": {
+          "success": false,
+          "coherence": 0.2,
+          "plan_valid": true,
+          "mode": "F1",
+          "evidence": "Tool flaky_net failed (args_invalid)",
+          "goal_alignment": 0.2
+        },
+        "correction_trigger": "F1"
+      },
+      {
+        "ts": "2026-07-20T18:47:42.444300+00:00",
+        "step_ix": 5,
+        "thought": "I will retry the FlakyNetTool with a longer timeout of 180 seconds to ensure a successful connection and data retrieval. This should allow enough time for the operation to complete, especially if there are any temporary network issues or server delays.",
+        "tool": "flaky_net",
+        "args": {
+          "url": "https://example.com",
+          "output_file": "index.html",
+          "timeout": 180
+        },
+        "result": {
+          "ok": false,
+          "error_type": "args_invalid",
+          "tool": "flaky_net",
+          "details": [
+            {
+              "type": "missing",
+              "loc": [
+                "package"
+              ],
+              "msg": "Field required",
+              "input": {
+                "url": "https://example.com",
+                "output_file": "index.html",
+                "timeout": 180
+              },
+              "url": "https://errors.pydantic.dev/2.12/v/missing"
+            }
+          ]
+        },
+        "eval": {
+          "success": false,
+          "coherence": 0.2,
+          "plan_valid": true,
+          "mode": "F1",
+          "evidence": "Tool flaky_net failed (args_invalid)",
+          "goal_alignment": 0.2
+        },
+        "correction_trigger": null
+      }
+    ],
+    "corrections": [
+      {
+        "ts": "2026-07-20T18:47:35.498180+00:00",
+        "step_ix": 1,
+        "mode": "F1",
+        "strategy": "tool_failure",
+        "mutated_object": "call",
+        "new_plan": null,
+        "budget_after": 2,
+        "evidence": "Tool flaky_net failed: args_invalid"
+      },
+      {
+        "ts": "2026-07-20T18:47:38.999219+00:00",
+        "step_ix": 3,
+        "mode": "F1",
+        "strategy": "tool_failure",
+        "mutated_object": "call",
+        "new_plan": null,
+        "budget_after": 1,
+        "evidence": "Tool flaky_net failed: args_invalid"
+      },
+      {
+        "ts": "2026-07-20T18:47:42.444300+00:00",
+        "step_ix": 5,
+        "mode": "F1",
+        "strategy": "tool_failure",
+        "mutated_object": "call",
+        "new_plan": null,
+        "budget_after": 0,
+        "evidence": "Tool flaky_net failed: args_invalid -- substituting fallback tool"
+      },
+      {
+        "ts": "2026-07-20T18:47:42.444300+00:00",
+        "step_ix": 5,
+        "mode": "F5",
+        "strategy": "budget_exceeded",
+        "mutated_object": "stop",
+        "new_plan": null,
+        "budget_after": 0,
+        "evidence": "Budget exhausted for S1 after 3 attempts"
+      }
+    ],
+    "provider_events": [
+      {
+        "ts": 1784573252.0637984,
+        "from": "openrouter",
+        "to": "next",
+        "reason": "Error code: 404 - {'error': {'message': 'No endpoints found for anthropic/claude-3.5-sonnet.', 'code': 404}, 'user_id': 'user_3ELYialS3EtsrlR64uKBy1gNoid'}"
+      },
+      {
+        "ts": 1784573252.352277,
+        "from": "openrouter",
+        "to": "next",
+        "reason": "Error code: 402 - {'error': {'message': 'This request requires more credits, or fewer max_tokens. You requested up to 1500 tokens, but can only afford 1013. To increase, visit https://openrouter.ai/se"
+      },
+      {
+        "ts": 1784573255.623668,
+        "from": "openrouter",
+        "to": "next",
+        "reason": "Error code: 404 - {'error': {'message': 'No endpoints found for anthropic/claude-3.5-sonnet.', 'code': 404}, 'user_id': 'user_3ELYialS3EtsrlR64uKBy1gNoid'}"
+      },
+      {
+        "ts": 1784573255.7739997,
+        "from": "openrouter",
+        "to": "next",
+        "reason": "Error code: 402 - {'error': {'message': 'This request requires more credits, or fewer max_tokens. You requested up to 1500 tokens, but can only afford 1013. To increase, visit https://openrouter.ai/se"
+      },
+      {
+        "ts": 1784573259.1118166,
+        "from": "openrouter",
+        "to": "next",
+        "reason": "Error code: 404 - {'error': {'message': 'No endpoints found for anthropic/claude-3.5-sonnet.', 'code': 404}, 'user_id': 'user_3ELYialS3EtsrlR64uKBy1gNoid'}"
+      },
+      {
+        "ts": 1784573259.2530596,
+        "from": "openrouter",
+        "to": "next",
+        "reason": "Error code: 402 - {'error': {'message': 'This request requires more credits, or fewer max_tokens. You requested up to 1500 tokens, but can only afford 1013. To increase, visit https://openrouter.ai/se"
+      }
+    ],
+    "unresolvable": [
+      {
+        "subtask_id": "S1",
+        "modes": [
+          "F1",
+          "F1",
+          "F1"
+        ],
+        "attempts": 3,
+        "evidence": "Budget exhausted for S1 after 3 attempts",
+        "hypothesis": "Subtask S1 may be unreachable with current tools/plan"
+      }
+    ],
+    "final_output": "[UNRESOLVABLE] Use the FlakyNetTool to fetch data from 'https://example.com' and write the HTML content to 'index.html'. If it fails, retry until it succeeds.",
+    "metrics": {
+      "steps": 5,
+      "self_corrections": 4,
+      "provider_switches": 6,
+      "unresolvable_count": 1
+    }
+  }
+}

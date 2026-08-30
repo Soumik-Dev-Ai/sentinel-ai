@@ -28,3 +28,4 @@ htmlcov/
 Thumbs.db
 .vercel
 .env*
+project_analysis.md
