@@ -144,5 +144,10 @@ class LLMRouter:
     def last_successful_model(self) -> str:
         return self._last_successful_model
         
-    def get_provider_events(self):
+    @property
+    def provider_events(self):
         return self._provider_events
+        
+    @provider_events.setter
+    def provider_events(self, value):
+        self._provider_events = value
