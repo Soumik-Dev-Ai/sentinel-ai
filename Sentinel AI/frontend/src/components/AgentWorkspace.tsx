@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useCallback } from "react";
+﻿import React, { useEffect, useRef, useState, useCallback } from "react";
 import { motion, AnimatePresence, LayoutGroup } from "framer-motion";
 import ReactMarkdown from "react-markdown";
 import { useMemo } from "react";
@@ -17,30 +17,117 @@ import { HumanReviewModal } from "./HumanReviewModal";
 const SMOOTH_SPRING = { type: "spring" as const, stiffness: 100, damping: 22, mass: 0.8 };
 
 /* =====================================================================
-   TerminalBox — Shows agent logs (live or simulated)
+   CodeBox – Shows generated code
    ===================================================================== */
-const TerminalBox: React.FC<{ lines: TerminalLine[]; running: boolean }> = ({ lines, running }) => {
+const CodeBox: React.FC<{ lines: CodeLine[]; running: boolean }> = ({ lines, running }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
+  
+  const [displayedLines, setDisplayedLines] = useState<CodeLine[]>(lines);
+  const [isErasing, setIsErasing] = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
 
+  // Sync incoming lines or trigger animations
+  useEffect(() => {
+    if (isErasing || isTyping) return;
+    
+    // Trigger Erase if lines dropped (rewrite)
+    if (lines.length < displayedLines.length && displayedLines.length > 2) {
+      setIsErasing(true);
+      return;
+    }
+    
+    // Trigger Typing if lines suddenly jumped (a large file was dropped in)
+    if (lines.length > displayedLines.length && lines.length - displayedLines.length > 2) {
+      setIsTyping(true);
+      return;
+    }
+    
+    setDisplayedLines(lines);
+  }, [lines, isErasing, isTyping, displayedLines.length]);
+
+  // The Backspace Animation Loop
+  useEffect(() => {
+    if (!isErasing) return;
+    
+    const timer = setInterval(() => {
+      setDisplayedLines(prev => {
+        const next = [...prev];
+        if (next.length === 0) {
+          setIsErasing(false);
+          return next;
+        }
+        
+        const lastLineIdx = next.length - 1;
+        const lastLine = next[lastLineIdx];
+        
+        if (!lastLine.text || lastLine.text.trim() === "") {
+          next.pop();
+        } else {
+          // Erase chunk of characters for fast backspace
+          next[lastLineIdx] = { ...lastLine, text: lastLine.text.substring(0, lastLine.text.length - 5) };
+        }
+        
+        return next;
+      });
+    }, 15);
+    
+    return () => clearInterval(timer);
+  }, [isErasing]);
+
+  // The Typing Animation Loop
+  useEffect(() => {
+    if (!isTyping) return;
+    
+    const timer = setInterval(() => {
+      setDisplayedLines(prev => {
+        if (prev.length === 0 && lines.length > 0) {
+          return [{ ...lines[0], text: "" }];
+        }
+        
+        const currentLineIdx = prev.length - 1;
+        const currentText = prev[currentLineIdx]?.text || "";
+        const targetText = lines[currentLineIdx]?.text || "";
+        
+        // If current line is fully typed
+        if (currentText.length >= targetText.length) {
+          if (prev.length < lines.length) {
+            // Move to next line
+            return [...prev, { ...lines[prev.length], text: "" }];
+          } else {
+            // Done typing all lines
+            setIsTyping(false);
+            return lines;
+          }
+        }
+        
+        // Add chunk of characters for fast typing
+        const charsToAdd = 8;
+        const nextText = targetText.substring(0, currentText.length + charsToAdd);
+        const nextArray = [...prev];
+        nextArray[currentLineIdx] = { ...lines[currentLineIdx], text: nextText };
+        return nextArray;
+      });
+    }, 15);
+    
+    return () => clearInterval(timer);
+  }, [isTyping, lines]);
+
+  // Auto-scroll to bottom
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [lines]);
+  }, [displayedLines]);
 
-  const getColor = (type: string) => {
+  const getStyle = (type: string): React.CSSProperties => {
     switch (type) {
-      case "command": return "hsl(var(--foreground))";
-      case "info": return "hsl(var(--muted-foreground))";
-      case "step": return "hsl(210, 80%, 65%)";
-      case "action": return "hsl(45, 90%, 65%)";
-      case "success": return "hsl(var(--primary))";
-      case "error": return "hsl(0, 84%, 60%)";
-      case "recovery": return "hsl(280, 80%, 65%)";
-      case "done": return "hsl(var(--primary))";
-      case "complete": return "hsl(var(--primary))";
-      case "separator": return "hsl(var(--muted-foreground))";
-      default: return "hsl(var(--muted-foreground))";
+      case "comment": return { color: "hsl(var(--muted-foreground))", fontStyle: "italic" };
+      case "code": return { color: "hsl(var(--foreground))" };
+      case "error": return { color: "hsl(0, 84%, 60%)", textDecoration: "line-through", opacity: 0.6 };
+      case "recovery": return { color: "hsl(280, 80%, 65%)", fontStyle: "italic" };
+      case "fix": return { color: "hsl(var(--primary))", fontWeight: 600 };
+      case "success": return { color: "hsl(var(--primary))", fontWeight: 600 };
+      default: return { color: "hsl(var(--muted-foreground))" };
     }
   };
 
@@ -52,32 +139,31 @@ const TerminalBox: React.FC<{ lines: TerminalLine[]; running: boolean }> = ({ li
           <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/70" />
           <div className="w-2.5 h-2.5 rounded-full bg-green-500/70" />
         </div>
-        <span className="text-[10px] uppercase tracking-widest text-[hsl(var(--muted-foreground))] ml-2">Live Terminal</span>
-        {running && (
+        <span className="text-[10px] uppercase tracking-widest text-[hsl(var(--muted-foreground))] ml-2">Code Generation</span>
+        {(running || isErasing || isTyping) && (
           <motion.div className="ml-auto w-2 h-2 rounded-full bg-[hsl(var(--primary))]" animate={{ opacity: [1, 0.3, 1] }} transition={{ duration: 1.2, repeat: Infinity }} />
         )}
       </div>
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-2 py-4 terminal-text" style={{ background: "hsl(0, 0%, 6%)" }}>
-        {lines.map((line, idx) => (
+        {displayedLines.map((line, idx) => (
           <motion.div
             key={idx}
             initial={{ opacity: 0, x: -8 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.3 }}
-            style={{ color: getColor(line.type) }}
+            style={getStyle(line.type)}
             className="py-0.5"
           >
-            {line.text}
+            {line.text || "\u00A0"}
           </motion.div>
         ))}
-        {running && <span className="terminal-cursor" />}
+        {(running || isErasing || isTyping) && <span className="terminal-cursor" />}
       </div>
     </div>
   );
 };
-
 /* =====================================================================
-   CodeBox — Shows generated code
+   CodeBox â€” Shows generated code
    ===================================================================== */
 const CodeBox: React.FC<{ lines: CodeLine[]; running: boolean }> = ({ lines, running }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -182,7 +268,7 @@ const CodeBox: React.FC<{ lines: CodeLine[]; running: boolean }> = ({ lines, run
 };
 
 /* =====================================================================
-   FinalContent — Typewriter final output
+   FinalContent â€” Typewriter final output
    ===================================================================== */
 const FinalContent: React.FC<{ report: string }> = ({ report }) => {
   return (
@@ -193,7 +279,7 @@ const FinalContent: React.FC<{ report: string }> = ({ report }) => {
           <div className="w-2.5 h-2.5 rounded-full" style={{ background: "hsl(var(--primary))", opacity: 0.4 }} />
           <div className="w-2.5 h-2.5 rounded-full" style={{ background: "hsl(var(--primary))", opacity: 0.2 }} />
         </div>
-        <span className="text-[10px] uppercase tracking-widest text-[hsl(var(--primary))] ml-2 font-medium">Agent Report — Complete</span>
+        <span className="text-[10px] uppercase tracking-widest text-[hsl(var(--primary))] ml-2 font-medium">Agent Report â€” Complete</span>
       </div>
       <div className="flex-1 overflow-y-auto px-4 py-6 md:px-6 md:py-8" style={{ background: "hsl(0, 0%, 5%)" }}>
         <div className="space-y-4 text-sm text-[hsl(var(--foreground))] font-light leading-relaxed">
@@ -214,7 +300,7 @@ const FinalContent: React.FC<{ report: string }> = ({ report }) => {
 };
 
 /* =====================================================================
-   AgentWorkspace — full lifecycle driven by hook state
+   AgentWorkspace â€” full lifecycle driven by hook state
    ===================================================================== */
 type WorkPhase = "RUNNING" | "DONE" | "MERGED";
 
@@ -340,7 +426,7 @@ export const AgentWorkspace: React.FC<AgentWorkspaceProps> = ({
           </button>
         )}
         <p className="text-[10px] uppercase tracking-widest text-[hsl(var(--muted-foreground))] mb-1">
-          {isMerged ? "Final Report" : "Processing Goal · Multi-Agent v2"}
+          {isMerged ? "Final Report" : "Processing Goal Â· Multi-Agent v2"}
         </p>
         <p className="text-sm text-[hsl(var(--foreground))] font-light max-w-lg truncate">
           "{goal}"
@@ -536,7 +622,7 @@ export const AgentWorkspace: React.FC<AgentWorkspaceProps> = ({
             >
               <div className="w-2 h-2 rounded-full bg-[hsl(var(--primary))]" />
               <span className="text-[10px] uppercase tracking-widest text-[hsl(var(--muted-foreground))]">
-                Sentinel AI 2.0 • Multi-Agent System
+                Sentinel AI 2.0 â€¢ Multi-Agent System
               </span>
             </motion.div>
           )}
@@ -545,3 +631,4 @@ export const AgentWorkspace: React.FC<AgentWorkspaceProps> = ({
     </motion.div>
   );
 };
+
