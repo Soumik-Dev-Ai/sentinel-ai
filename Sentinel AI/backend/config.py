@@ -26,6 +26,14 @@ MODEL_TIERS = {
 EVAL_REPORTS_DIR = WORKSPACE_ROOT / "eval" / "reports"
 PROVIDER_TIMEOUT_SECONDS = 60
 
+# Restored Original Variables
+RECOVERY_BUDGET_PER_SUBTASK = int(os.getenv("RECOVERY_BUDGET_PER_SUBTASK", "3"))
+MAX_AGENT_STEPS = int(os.getenv("MAX_AGENT_STEPS", "25"))
+TOOL_TIMEOUT_SECONDS = int(os.getenv("TOOL_TIMEOUT_SECONDS", "30"))
+HEVA_E2E = os.getenv("HEVA_E2E", "0") == "1"
+NVIDIA_NIM_BASE_URL = os.getenv("NVIDIA_NIM_BASE_URL", "https://integrate.api.nvidia.com/v1")
+
+# API Keys
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "")
 COHERE_API_KEY = os.getenv("COHERE_API_KEY", "")
 GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
