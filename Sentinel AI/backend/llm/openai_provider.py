@@ -13,7 +13,7 @@ class OpenAIProvider(Provider):
         if self._api_key:
             try:
                 from openai import OpenAI
-                self._client = OpenAI(api_key=self._api_key)
+                self._client = OpenAI(api_key=self._api_key, base_url=getattr(self, "_base_url", None))
             except ImportError:
                 pass
 
@@ -22,41 +22,51 @@ class OpenAIProvider(Provider):
         
     def _resolve_dynamic_model(self) -> str:
         if self._model: return self._model
+        
+        # Hardcoded overrides for providers with strict or retired model names
         if self.name == "openrouter":
             self._model = "openrouter/auto"
             return self._model
         if self.name == "cohere":
-            self._model = "command-r-plus"
+            self._model = "command-r-plus-08-2024" if self._reasoning_type == "advanced" else "command-r-08-2024"
+            return self._model
+        if self.name == "cerebras":
+            self._model = "llama3.1-70b" if self._reasoning_type == "advanced" else "llama3.1-8b"
+            return self._model
+        if self.name == "sambanova":
+            self._model = "Meta-Llama-3.3-70B-Instruct" if self._reasoning_type == "advanced" else "Meta-Llama-3.1-8B-Instruct"
+            return self._model
+        if self.name == "nvidia_nim":
+            self._model = "meta/llama-3.1-70b-instruct" if self._reasoning_type == "advanced" else "meta/llama-3.1-8b-instruct"
             return self._model
             
+        # Dynamic lookup (only runs for Groq or generic OpenAI endpoints)
         try:
             if not self._client: return "default-model"
             model_list = self._client.models.list()
-            models = [m.id for m in model_list.data if "whisper" not in m.id.lower() and "dall" not in m.id.lower() and "embed" not in m.id.lower() and "orpheus" not in m.id.lower()]
+            valid_families = ["llama", "gpt", "claude", "mistral", "qwen", "mixtral"]
+            invalid_families = ["whisper", "dall", "embed", "orpheus", "guard", "vision"]
             
-            llama_70b = [m for m in models if "llama" in m.lower() and "70b" in m.lower()]
-            llama_8b = [m for m in models if "llama" in m.lower() and "8b" in m.lower()]
+            models = []
+            for m in model_list.data:
+                mid = m.id.lower()
+                if any(bad in mid for bad in invalid_families): continue
+                if any(good in mid for good in valid_families):
+                    models.append(m.id)
+            
+            if not models:
+                models = [m.id for m in model_list.data if "embed" not in m.id.lower()]
+
+            llama_70b = [m for m in models if "llama" in m.lower() and ("70b" in m.lower() or "90b" in m.lower())]
+            llama_8b = [m for m in models if "llama" in m.lower() and ("8b" in m.lower() or "instant" in m.lower())]
             
             if self._reasoning_type == "advanced":
-                if llama_70b:
-                    self._model = llama_70b[0]
-                    return self._model
-                for m in models:
-                    if any(x in m.lower() for x in ["70b", "90b", "opus", "4o", "plus", "large", "3.3"]):
-                        self._model = m
-                        return m
-                self._model = models[0]
+                self._model = llama_70b[0] if llama_70b else models[0]
             elif self._reasoning_type == "fast":
-                if llama_8b:
-                    self._model = llama_8b[0]
-                    return self._model
-                for m in models:
-                    if any(x in m.lower() for x in ["8b", "haiku", "instant", "mini"]):
-                        self._model = m
-                        return m
-                self._model = models[-1]
+                self._model = llama_8b[0] if llama_8b else models[-1]
             else:
                 self._model = models[0]
+                    
         except Exception:
             self._model = "default-model"
             
@@ -79,7 +89,6 @@ class OpenAIProvider(Provider):
         try:
             resp = self._client.chat.completions.create(**kwargs)
         except Exception as e:
-            # If the specific dynamic model restricts max_tokens to a small number, retry without max_tokens
             if "max_tokens" in str(e).lower():
                 kwargs.pop("max_tokens", None)
                 resp = self._client.chat.completions.create(**kwargs)

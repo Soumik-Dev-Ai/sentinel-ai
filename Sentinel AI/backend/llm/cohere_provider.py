@@ -9,7 +9,7 @@ class CohereProvider(Provider):
     def __init__(self, api_key: str | None = None, reasoning_type: str = "advanced"):
         self._api_key = api_key or getattr(config, "COHERE_API_KEY", "")
         self._reasoning_type = reasoning_type
-        self._model = "command-r-plus" if reasoning_type == "advanced" else "command-r"
+        self._model = "command-r-plus-08-2024" if reasoning_type == "advanced" else "command-r-08-2024"
 
     @property
     def name(self) -> str: return "cohere"
