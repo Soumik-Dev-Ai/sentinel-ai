@@ -94,7 +94,6 @@ class LLMRouter:
             provider_inst: Provider = p["provider"]
             start_t = time.time()
             try:
-                # Resolve dynamic model right before calling
                 if hasattr(provider_inst, "_resolve_dynamic_model"):
                     provider_inst._resolve_dynamic_model()
                     
@@ -138,11 +137,11 @@ class LLMRouter:
         raise RuntimeError(f"All providers in tier '{model_tier}' exhausted. Last error: {_sanitize(last_error or '')}")
 
     @property
-    def last_provider(self) -> str:
+    def last_successful_provider(self) -> str:
         return self._last_successful_provider
         
     @property
-    def last_model(self) -> str:
+    def last_successful_model(self) -> str:
         return self._last_successful_model
         
     def get_provider_events(self):
