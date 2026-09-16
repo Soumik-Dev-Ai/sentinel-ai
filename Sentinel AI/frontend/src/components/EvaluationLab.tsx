@@ -87,6 +87,32 @@ export const EvaluationLab: React.FC<{ onExit?: () => void }> = ({ onExit }) => 
     }
   };
 
+  const handleDownloadReport = () => {
+    if (!selectedReport) return;
+    const base = selectedReport.metrics_baseline;
+    const sc = selectedReport.metrics_with_self_correction;
+    
+    let md = `# Evaluation Report: ${selectedReport.run_name}\n\n`;
+    md += `## Performance Summary\n`;
+    md += `| Metric | Baseline | Self-Correction ON | Performance Change |\n`;
+    md += `|---|---|---|---|\n`;
+    md += `| Completion Rate | ${(base.completion_rate * 100).toFixed(1)}% | ${(sc.completion_rate * 100).toFixed(1)}% | ${((sc.completion_rate - base.completion_rate) * 100).toFixed(1)}% |\n`;
+    md += `| Avg Steps | ${base.avg_steps.toFixed(2)} | ${sc.avg_steps.toFixed(2)} | ${(sc.avg_steps - base.avg_steps).toFixed(2)} |\n`;
+    md += `| Total Corrections | ${base.total_self_corrections} | ${sc.total_self_corrections} | ${sc.total_self_corrections > base.total_self_corrections ? '+' : ''}${sc.total_self_corrections - base.total_self_corrections} |\n`;
+    md += `| Avg Time (s) | ${base.avg_elapsed.toFixed(2)} | ${sc.avg_elapsed.toFixed(2)} | ${(sc.avg_elapsed - base.avg_elapsed).toFixed(2)} |\n\n`;
+    
+    md += `## Raw Report JSON\n`;
+    md += "```json\n" + JSON.stringify(selectedReport, null, 2) + "\n```";
+
+    const blob = new Blob([md], { type: "text/markdown" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${selectedReport.run_name}_performance_analysis.md`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="eval-lab">
       <div className="eval-header">
@@ -120,6 +146,12 @@ export const EvaluationLab: React.FC<{ onExit?: () => void }> = ({ onExit }) => 
                   &larr; Back to Evaluation Lab
                 </button>
                 <h3 style={{ margin: 0 }}>Evaluation Report: {selectedReport.run_name}</h3>
+                <button
+                  onClick={handleDownloadReport}
+                  style={{ background: '#3b82f6', border: 'none', color: 'white', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', marginLeft: 'auto', fontWeight: 'bold' }}
+                >
+                  &#128190; Download Report
+                </button>
               </div>
               
               <div className="metrics-grid">
