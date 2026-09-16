@@ -26,18 +26,18 @@ PROVIDER_TIMEOUT_SECONDS = int(os.getenv("PROVIDER_TIMEOUT_SECONDS", "60"))
 MODEL_TIERS = {
     "strategic": [
         {"provider": "openrouter", "model": "anthropic/claude-3.5-sonnet", "is_preferred": True, "is_free": False},
-        {"provider": "cohere", "model": "command-r-plus-08-2024", "is_preferred": False, "is_free": True},
-        {"provider": "openrouter", "model": "openai/gpt-4o", "is_preferred": True, "is_free": False},
+        {"provider": "cohere", "model": "command-r-plus", "is_preferred": False, "is_free": True},
+        {"provider": "openrouter", "model": "openai/gpt-4o", "is_preferred": False, "is_free": False},
     ],
     "coding": [
-        {"provider": "sambanova", "model": "Meta-Llama-3.1-70B-Instruct", "is_preferred": False, "is_free": True},
-        {"provider": "groq", "model": "llama-3.3-70b-versatile", "is_preferred": False, "is_free": True},
-        {"provider": "openrouter", "model": "meta-llama/llama-3.3-70b-instruct", "is_preferred": True, "is_free": False},
+        {"provider": "groq", "model": "llama-3.3-70b-versatile", "is_preferred": True, "is_free": True},
+        {"provider": "sambanova", "model": "Meta-Llama-3.3-70B-Instruct", "is_preferred": False, "is_free": True},
+        {"provider": "openrouter", "model": "meta-llama/llama-3.3-70b-instruct", "is_preferred": False, "is_free": False},
     ],
     "fast_eval": [
-        {"provider": "nvidia_nim", "model": "meta/llama-3.1-8b-instruct", "is_preferred": True, "is_free": False},
-        {"provider": "cerebras", "model": "gemma-4-31b", "is_preferred": False, "is_free": True},
-        {"provider": "groq", "model": "llama-3.1-8b-instant", "is_preferred": False, "is_free": True},
+        {"provider": "groq", "model": "llama-3.1-8b-instant", "is_preferred": True, "is_free": True},
+        {"provider": "cerebras", "model": "llama3.1-8b", "is_preferred": False, "is_free": True},
+        {"provider": "openrouter", "model": "meta-llama/llama-3.1-8b-instruct", "is_preferred": False, "is_free": False},
     ]
 }
 
