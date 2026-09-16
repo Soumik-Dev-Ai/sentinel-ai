@@ -88,7 +88,7 @@ class LLMRouter:
             raise ValueError(f"No providers configured for tier '{model_tier}'")
 
         sorted_list = self._sort_providers(tier_list)
-        last_error = None
+        error_chain = []
 
         for p in sorted_list:
             provider_inst: Provider = p["provider"]
@@ -119,6 +119,7 @@ class LLMRouter:
 
             except concurrent.futures.TimeoutError:
                 last_error = f"{provider_inst.name} ({getattr(provider_inst, '_model', 'dynamic')}) timed out after {self._provider_timeout}s"
+                error_chain.append(last_error)
                 self._provider_events.append({
                     "ts": time.time(),
                     "from": provider_inst.name,
@@ -126,7 +127,8 @@ class LLMRouter:
                     "reason": last_error
                 })
             except Exception as e:
-                last_error = str(e)
+                last_error = f"{provider_inst.name} failed: {str(e)}"
+                error_chain.append(last_error)
                 self._provider_events.append({
                     "ts": time.time(),
                     "from": provider_inst.name,
@@ -134,7 +136,9 @@ class LLMRouter:
                     "reason": last_error
                 })
 
-        raise RuntimeError(f"All providers in tier '{model_tier}' exhausted. Last error: {_sanitize(last_error or '')}")
+        # If we got here, ALL providers failed. Let's show the user exactly why each one failed!
+        chain_summary = " | ".join([_sanitize(err) for err in error_chain])
+        raise RuntimeError(f"All providers in tier '{model_tier}' exhausted. Chain of failures: {chain_summary}")
 
     @property
     def last_successful_provider(self) -> str:
