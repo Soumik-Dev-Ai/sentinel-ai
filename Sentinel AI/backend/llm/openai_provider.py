@@ -1,21 +1,18 @@
-from __future__ import annotations
-
+﻿from __future__ import annotations
 import json
 from typing import Any
-
 from backend.llm.contracts import Provider, Reply
 
-
 class OpenAIProvider(Provider):
-    def __init__(self, api_key: str = "", model: str = "gpt-4o", max_tokens: int = 4096):
+    def __init__(self, api_key: str = "", reasoning_type: str = "advanced", max_tokens: int = 4096):
         self._api_key = api_key
-        self._model = model
+        self._reasoning_type = reasoning_type
+        self._model = None
         self._max_tokens = max_tokens
         self._client = None
         if self._api_key:
             try:
                 from openai import OpenAI
-
                 self._client = OpenAI(api_key=self._api_key)
             except ImportError:
                 pass
@@ -23,97 +20,92 @@ class OpenAIProvider(Provider):
     @property
     def name(self) -> str:
         return "openai"
+        
+    def _resolve_dynamic_model(self) -> str:
+        if self._model: return self._model
+        
+        if self.name == "openrouter":
+            self._model = "openrouter/auto"
+            return self._model
+            
+        if self.name == "cohere":
+            self._model = "command-r-plus"
+            return self._model
+            
+        try:
+            if not self._client: return "default-model"
+            model_list = self._client.models.list()
+            models = [m.id for m in model_list.data]
+            
+            if self._reasoning_type == "advanced":
+                for m in models:
+                    if any(x in m.lower() for x in ["70b", "90b", "opus", "4o", "plus", "large", "3.3"]):
+                        self._model = m
+                        return m
+                self._model = models[0]
+            elif self._reasoning_type == "fast":
+                for m in models:
+                    if any(x in m.lower() for x in ["8b", "haiku", "instant", "mini"]):
+                        self._model = m
+                        return m
+                self._model = models[-1]
+            else:
+                self._model = models[0]
+        except Exception:
+            self._model = "default-model"
+            
+        return self._model
 
-    def chat(
-        self,
-        messages: list[dict[str, Any]],
-        tools: list[dict[str, Any]] | None = None,
-        response_schema: dict[str, Any] | None = None,
-        stream_callback: Any = None,
-    ) -> Reply:
+    def chat(self, messages: list[dict[str, Any]], tools: list[dict[str, Any]] | None = None, response_schema: dict[str, Any] | None = None, stream_callback: Any = None) -> Reply:
         if self._client is None:
-            raise RuntimeError("OpenAI client not configured (no API key or SDK missing)")
+            raise RuntimeError(f"{self.name} client not configured (no API key or SDK missing)")
+            
+        # Ensure model is resolved
+        self._resolve_dynamic_model()
 
         formatted_tools = None
         if tools:
             formatted_tools = []
             for t in tools:
-                formatted_tools.append(
-                    {
-                        "type": "function",
-                        "function": {
-                            "name": t["name"],
-                            "description": t.get("description", ""),
-                            "parameters": t.get(
-                                "input_schema", {"type": "object", "properties": {}}
-                            ),
-                        },
-                    }
-                )
+                formatted_tools.append({
+                    "type": "function",
+                    "function": {
+                        "name": t["name"],
+                        "description": t.get("description", ""),
+                        "parameters": t.get("input_schema", {"type": "object", "properties": {}}),
+                    },
+                })
 
         kwargs: dict[str, Any] = {
             "model": self._model,
             "messages": messages,
             "max_tokens": self._max_tokens,
-            "stream": True,
+            "temperature": 0.1,
         }
         if formatted_tools:
             kwargs["tools"] = formatted_tools
+
         if response_schema:
-            kwargs["response_format"] = {"type": "json_object"}
+            kwargs["response_format"] = {"type": "json_schema", "json_schema": {"name": "schema", "schema": response_schema, "strict": True}}
 
-        try:
-            resp = self._client.chat.completions.create(**kwargs)
-        except Exception as e:
-            # Only retry without response_format when the failure originates from
-            # the OpenAI-compatible API (e.g. a model that rejects structured
-            # output). Other errors (network, auth, timeouts, bugs) must surface.
-            if not (getattr(e, "__module__", "") or "").startswith("openai"):
-                raise
-            kwargs.pop("response_format", None)
-            resp = self._client.chat.completions.create(**kwargs)
+        resp = self._client.chat.completions.create(**kwargs)
+        choice = resp.choices[0]
+        msg = choice.message
+        
+        usage = resp.usage
+        usage_dict = {
+            "model": self._model,
+            "input_tokens": usage.prompt_tokens if usage else 0,
+            "output_tokens": usage.completion_tokens if usage else 0,
+            "total_tokens": usage.total_tokens if usage else 0,
+        }
 
-        thought = ""
-        action_args_str = ""
-        tool_name = ""
-        finish_reason = "stop"
+        if choice.finish_reason == "tool_calls" and msg.tool_calls:
+            tc = msg.tool_calls[0]
+            action = {
+                "name": tc.function.name,
+                "args": json.loads(tc.function.arguments),
+            }
+            return Reply(thought="", action=action, finish_reason="tool_calls", usage=usage_dict)
 
-        for chunk in resp:
-            if not chunk.choices:
-                continue
-            choice = chunk.choices[0]
-            if choice.finish_reason:
-                finish_reason = choice.finish_reason
-            
-            delta = choice.delta
-            if delta.content:
-                token = delta.content
-                thought += token
-                if stream_callback:
-                    stream_callback("thought", token)
-            
-            if delta.tool_calls:
-                tc = delta.tool_calls[0]
-                if tc.function:
-                    if tc.function.name:
-                        tool_name = tc.function.name
-                    if tc.function.arguments:
-                        token = tc.function.arguments
-                        action_args_str += token
-                        if stream_callback:
-                            stream_callback("action", token)
-
-        action = None
-        if tool_name or action_args_str:
-            try:
-                parsed_args = json.loads(action_args_str) if action_args_str else {}
-            except (json.JSONDecodeError, TypeError):
-                parsed_args = {"raw": action_args_str}
-            action = {"tool": tool_name, "args": parsed_args}
-
-        return Reply(
-            thought=thought,
-            action=action,
-            finish_reason=finish_reason,
-            usage={},  # Streaming usually drops usage info unless stream_options={"include_usage": True} is set
-        )
+        return Reply(thought=msg.content or "", action=None, finish_reason=choice.finish_reason or "stop", usage=usage_dict)

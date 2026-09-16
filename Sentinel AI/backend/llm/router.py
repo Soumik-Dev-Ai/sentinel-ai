@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import concurrent.futures
 import time
@@ -31,12 +31,11 @@ class LLMRouter:
         self._last_successful_provider: str = ""
         self._last_successful_model: str = ""
         
-        # Build tier providers from config
         self._tier_providers: dict[str, list[dict[str, Any]]] = {}
         for tier, models in config.MODEL_TIERS.items():
             self._tier_providers[tier] = []
             for spec in models:
-                provider = self._make_provider(spec["provider"], spec["model"])
+                provider = self._make_provider(spec["provider"], spec.get("reasoning_type", "logical"))
                 if provider is not None:
                     self._tier_providers[tier].append({
                         "provider": provider,
@@ -51,106 +50,100 @@ class LLMRouter:
             executor.shutdown(wait=False)
 
     @staticmethod
-    def _make_provider(name: str, model: str) -> Provider | None:
+    def _make_provider(name: str, reasoning_type: str) -> Provider | None:
         if name == "groq":
             from backend.llm.groq_provider import GroqProvider
-            return GroqProvider(model=model)
+            return GroqProvider(reasoning_type=reasoning_type)
         if name == "nvidia_nim":
             from backend.llm.nvidia_nim_provider import NVIDIANIMProvider
-            return NVIDIANIMProvider(model=model)
+            return NVIDIANIMProvider(reasoning_type=reasoning_type)
         if name == "openrouter":
             from backend.llm.openrouter_provider import OpenRouterProvider
-            return OpenRouterProvider(model=model)
+            return OpenRouterProvider(reasoning_type=reasoning_type)
         if name == "cerebras":
             from backend.llm.cerebras_provider import CerebrasProvider
-            return CerebrasProvider(model=model)
+            return CerebrasProvider(reasoning_type=reasoning_type)
         if name == "sambanova":
             from backend.llm.sambanova_provider import SambaNovaProvider
-            return SambaNovaProvider(model=model)
+            return SambaNovaProvider(reasoning_type=reasoning_type)
         if name == "cohere":
             from backend.llm.cohere_provider import CohereProvider
-            return CohereProvider(model=model)
+            return CohereProvider(reasoning_type=reasoning_type)
         return None
 
     def _sort_providers(self, providers: list[dict[str, Any]]) -> list[dict[str, Any]]:
-        # Sort logic: 
-        # 1. Preferred models (OpenRouter, NVIDIA) first (True > False, so sort descending)
-        # 2. Free models next (True > False, sort descending)
-        # 3. Usage count (lowest first, sort ascending)
-        return sorted(
-            providers, 
+        providers.sort(
             key=lambda x: (
-                not x["is_preferred"],  # False sorts before True, so not True (False) goes first
-                not x["is_free"],       # Free models prioritized next
-                x["usage_count"]        # Load balance: pick the least used one in the same priority bracket
-            )
+                x["is_preferred"],
+                x["is_free"],
+                -x["usage_count"]
+            ),
+            reverse=True,
         )
+        return providers
 
-    def chat(
-        self,
-        messages: list[dict[str, Any]],
-        tools: list[dict[str, Any]] | None = None,
-        response_schema: dict[str, Any] | None = None,
-        stream_callback: Any = None,
-        model_tier: str = "strategic",
-    ) -> Reply:
-        last_error: str = ""
-        
-        provider_specs = self._tier_providers.get(model_tier)
-        if not provider_specs:
-            # Fallback to strategic if tier doesn't exist
-            provider_specs = self._tier_providers.get("strategic", [])
-            
-        sorted_specs = self._sort_providers(provider_specs)
-            
-        for spec in sorted_specs:
-            provider = spec["provider"]
+    def chat(self, messages: list[dict[str, Any]], tools: list[dict[str, Any]] | None = None, response_schema: dict[str, Any] | None = None, stream_callback: Any = None, model_tier: str = "coding") -> Reply:
+        tier_list = self._tier_providers.get(model_tier, [])
+        if not tier_list:
+            raise ValueError(f"No providers configured for tier '{model_tier}'")
+
+        sorted_list = self._sort_providers(tier_list)
+        last_error = None
+
+        for p in sorted_list:
+            provider_inst: Provider = p["provider"]
+            start_t = time.time()
             try:
+                # Resolve dynamic model right before calling
+                if hasattr(provider_inst, "_resolve_dynamic_model"):
+                    provider_inst._resolve_dynamic_model()
+                    
                 future = self._executor.submit(
-                    provider.chat, messages, tools, response_schema, stream_callback
+                    provider_inst.chat,
+                    messages,
+                    tools,
+                    response_schema,
+                    stream_callback,
                 )
                 reply = future.result(timeout=self._provider_timeout)
                 
-                # Update usage count for load balancing
-                spec["usage_count"] += 1
-                
-                self._last_successful_provider = provider.name
-                self._last_successful_model = getattr(
-                    provider, "model", reply.usage.get("model", "") if reply.usage else ""
-                )
+                self._provider_events.append({
+                    "ts": time.time(),
+                    "from": provider_inst.name,
+                    "to": "success",
+                    "latency": time.time() - start_t
+                })
+                p["usage_count"] += 1
+                self._last_successful_provider = provider_inst.name
+                self._last_successful_model = getattr(provider_inst, "_model", "dynamic")
                 return reply
-            except TimeoutError:
-                last_error = f"{provider.name} ({getattr(provider, 'model', 'unknown')}) timed out after {self._provider_timeout}s"
-                self._provider_events.append(
-                    {
-                        "ts": time.time(),
-                        "from": provider.name,
-                        "to": "next",
-                        "reason": last_error,
-                    }
-                )
-                continue
+
+            except concurrent.futures.TimeoutError:
+                last_error = f"{provider_inst.name} ({getattr(provider_inst, '_model', 'dynamic')}) timed out after {self._provider_timeout}s"
+                self._provider_events.append({
+                    "ts": time.time(),
+                    "from": provider_inst.name,
+                    "to": "next",
+                    "reason": last_error
+                })
             except Exception as e:
-                last_error = _sanitize(str(e))
-                self._provider_events.append(
-                    {
-                        "ts": time.time(),
-                        "from": provider.name,
-                        "to": "next",
-                        "reason": last_error[:200],
-                    }
-                )
-                continue
-        raise RuntimeError(f"All providers in tier '{model_tier}' exhausted. Last error: {_sanitize(last_error)}")
+                last_error = str(e)
+                self._provider_events.append({
+                    "ts": time.time(),
+                    "from": provider_inst.name,
+                    "to": "next",
+                    "reason": last_error
+                })
+
+        raise RuntimeError(f"All providers in tier '{model_tier}' exhausted. Last error: {_sanitize(last_error or '')}")
 
     @property
-    def provider_events(self) -> list[dict[str, Any]]:
-        return self._provider_events
-
-    @property
-    def last_successful_provider(self) -> str:
+    def last_provider(self) -> str:
         return self._last_successful_provider
-
+        
     @property
-    def last_successful_model(self) -> str:
+    def last_model(self) -> str:
         return self._last_successful_model
+        
+    def get_provider_events(self):
+        return self._provider_events
