@@ -1,0 +1,13 @@
+{
+  "goal_id": "goal_5",
+  "spec": "Write a Python script 'bad_syntax.py' that intentionally contains a syntax error (e.g. missing parenthesis on print), run it using RunPythonTool to observe the error, then fix the script to have correct syntax and print 'Syntax fixed', and run it again.",
+  "self_correction_enabled": true,
+  "success": false,
+  "steps": 0,
+  "self_corrections": 0,
+  "elapsed_seconds": 0,
+  "memory_dump": {
+    "final_output": "Agent crashed: RuntimeError: All providers in tier 'strategic' exhausted. Last error: Error code: 400 - {'error': {'message': 'The model `whisper-large-v3-turbo` does not support chat completions', 'type': 'invalid_request_error'}}",
+    "steps": []
+  }
+}

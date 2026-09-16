@@ -1,0 +1,179 @@
+{
+  "run_name": "eval_1789573440",
+  "timestamp": 1789573440,
+  "total_goals": 10,
+  "metrics_with_self_correction": {
+    "completion_rate": 0.0,
+    "avg_steps": 0.0,
+    "total_self_corrections": 0,
+    "avg_elapsed": 0.0
+  },
+  "metrics_baseline": {
+    "completion_rate": 0.0,
+    "avg_steps": 0.0,
+    "total_self_corrections": 0,
+    "avg_elapsed": 0.0
+  },
+  "runs": [
+    {
+      "goal_id": "goal_1",
+      "self_correction_enabled": false,
+      "success": false,
+      "steps": 0,
+      "self_corrections": 0,
+      "elapsed_seconds": 0
+    },
+    {
+      "goal_id": "goal_1",
+      "self_correction_enabled": true,
+      "success": false,
+      "steps": 0,
+      "self_corrections": 0,
+      "elapsed_seconds": 0
+    },
+    {
+      "goal_id": "goal_10",
+      "self_correction_enabled": false,
+      "success": false,
+      "steps": 0,
+      "self_corrections": 0,
+      "elapsed_seconds": 0
+    },
+    {
+      "goal_id": "goal_10",
+      "self_correction_enabled": true,
+      "success": false,
+      "steps": 0,
+      "self_corrections": 0,
+      "elapsed_seconds": 0
+    },
+    {
+      "goal_id": "goal_2",
+      "self_correction_enabled": false,
+      "success": false,
+      "steps": 0,
+      "self_corrections": 0,
+      "elapsed_seconds": 0
+    },
+    {
+      "goal_id": "goal_2",
+      "self_correction_enabled": true,
+      "success": false,
+      "steps": 0,
+      "self_corrections": 0,
+      "elapsed_seconds": 0
+    },
+    {
+      "goal_id": "goal_3",
+      "self_correction_enabled": false,
+      "success": false,
+      "steps": 0,
+      "self_corrections": 0,
+      "elapsed_seconds": 0
+    },
+    {
+      "goal_id": "goal_3",
+      "self_correction_enabled": true,
+      "success": false,
+      "steps": 0,
+      "self_corrections": 0,
+      "elapsed_seconds": 0
+    },
+    {
+      "goal_id": "goal_4",
+      "self_correction_enabled": false,
+      "success": false,
+      "steps": 0,
+      "self_corrections": 0,
+      "elapsed_seconds": 0
+    },
+    {
+      "goal_id": "goal_4",
+      "self_correction_enabled": true,
+      "success": false,
+      "steps": 0,
+      "self_corrections": 0,
+      "elapsed_seconds": 0
+    },
+    {
+      "goal_id": "goal_5",
+      "self_correction_enabled": false,
+      "success": false,
+      "steps": 0,
+      "self_corrections": 0,
+      "elapsed_seconds": 0
+    },
+    {
+      "goal_id": "goal_5",
+      "self_correction_enabled": true,
+      "success": false,
+      "steps": 0,
+      "self_corrections": 0,
+      "elapsed_seconds": 0
+    },
+    {
+      "goal_id": "goal_6",
+      "self_correction_enabled": false,
+      "success": false,
+      "steps": 0,
+      "self_corrections": 0,
+      "elapsed_seconds": 0
+    },
+    {
+      "goal_id": "goal_6",
+      "self_correction_enabled": true,
+      "success": false,
+      "steps": 0,
+      "self_corrections": 0,
+      "elapsed_seconds": 0
+    },
+    {
+      "goal_id": "goal_7",
+      "self_correction_enabled": false,
+      "success": false,
+      "steps": 0,
+      "self_corrections": 0,
+      "elapsed_seconds": 0
+    },
+    {
+      "goal_id": "goal_7",
+      "self_correction_enabled": true,
+      "success": false,
+      "steps": 0,
+      "self_corrections": 0,
+      "elapsed_seconds": 0
+    },
+    {
+      "goal_id": "goal_8",
+      "self_correction_enabled": false,
+      "success": false,
+      "steps": 0,
+      "self_corrections": 0,
+      "elapsed_seconds": 0
+    },
+    {
+      "goal_id": "goal_8",
+      "self_correction_enabled": true,
+      "success": false,
+      "steps": 0,
+      "self_corrections": 0,
+      "elapsed_seconds": 0
+    },
+    {
+      "goal_id": "goal_9",
+      "self_correction_enabled": false,
+      "success": false,
+      "steps": 0,
+      "self_corrections": 0,
+      "elapsed_seconds": 0
+    },
+    {
+      "goal_id": "goal_9",
+      "self_correction_enabled": true,
+      "success": false,
+      "steps": 0,
+      "self_corrections": 0,
+      "elapsed_seconds": 0
+    }
+  ]
+}

@@ -18,16 +18,13 @@ class OpenAIProvider(Provider):
                 pass
 
     @property
-    def name(self) -> str:
-        return "openai"
+    def name(self) -> str: return "openai"
         
     def _resolve_dynamic_model(self) -> str:
         if self._model: return self._model
-        
         if self.name == "openrouter":
             self._model = "openrouter/auto"
             return self._model
-            
         if self.name == "cohere":
             self._model = "command-r-plus"
             return self._model
@@ -35,15 +32,24 @@ class OpenAIProvider(Provider):
         try:
             if not self._client: return "default-model"
             model_list = self._client.models.list()
-            models = [m.id for m in model_list.data]
+            models = [m.id for m in model_list.data if "whisper" not in m.id.lower() and "dall" not in m.id.lower() and "embed" not in m.id.lower() and "orpheus" not in m.id.lower()]
+            
+            llama_70b = [m for m in models if "llama" in m.lower() and "70b" in m.lower()]
+            llama_8b = [m for m in models if "llama" in m.lower() and "8b" in m.lower()]
             
             if self._reasoning_type == "advanced":
+                if llama_70b:
+                    self._model = llama_70b[0]
+                    return self._model
                 for m in models:
                     if any(x in m.lower() for x in ["70b", "90b", "opus", "4o", "plus", "large", "3.3"]):
                         self._model = m
                         return m
                 self._model = models[0]
             elif self._reasoning_type == "fast":
+                if llama_8b:
+                    self._model = llama_8b[0]
+                    return self._model
                 for m in models:
                     if any(x in m.lower() for x in ["8b", "haiku", "instant", "mini"]):
                         self._model = m
@@ -57,55 +63,38 @@ class OpenAIProvider(Provider):
         return self._model
 
     def chat(self, messages: list[dict[str, Any]], tools: list[dict[str, Any]] | None = None, response_schema: dict[str, Any] | None = None, stream_callback: Any = None) -> Reply:
-        if self._client is None:
-            raise RuntimeError(f"{self.name} client not configured (no API key or SDK missing)")
-            
-        # Ensure model is resolved
+        if self._client is None: raise RuntimeError(f"{self.name} client not configured (no API key or SDK missing)")
         self._resolve_dynamic_model()
 
         formatted_tools = None
         if tools:
             formatted_tools = []
             for t in tools:
-                formatted_tools.append({
-                    "type": "function",
-                    "function": {
-                        "name": t["name"],
-                        "description": t.get("description", ""),
-                        "parameters": t.get("input_schema", {"type": "object", "properties": {}}),
-                    },
-                })
+                formatted_tools.append({"type": "function", "function": {"name": t["name"], "description": t.get("description", ""), "parameters": t.get("input_schema", {"type": "object", "properties": {}})}})
 
-        kwargs: dict[str, Any] = {
-            "model": self._model,
-            "messages": messages,
-            "max_tokens": self._max_tokens,
-            "temperature": 0.1,
-        }
-        if formatted_tools:
-            kwargs["tools"] = formatted_tools
+        kwargs: dict[str, Any] = {"model": self._model, "messages": messages, "max_tokens": self._max_tokens, "temperature": 0.1}
+        if formatted_tools: kwargs["tools"] = formatted_tools
+        if response_schema: kwargs["response_format"] = {"type": "json_schema", "json_schema": {"name": "schema", "schema": response_schema, "strict": True}}
 
-        if response_schema:
-            kwargs["response_format"] = {"type": "json_schema", "json_schema": {"name": "schema", "schema": response_schema, "strict": True}}
+        try:
+            resp = self._client.chat.completions.create(**kwargs)
+        except Exception as e:
+            # If the specific dynamic model restricts max_tokens to a small number, retry without max_tokens
+            if "max_tokens" in str(e).lower():
+                kwargs.pop("max_tokens", None)
+                resp = self._client.chat.completions.create(**kwargs)
+            else:
+                raise e
 
-        resp = self._client.chat.completions.create(**kwargs)
         choice = resp.choices[0]
         msg = choice.message
         
         usage = resp.usage
-        usage_dict = {
-            "model": self._model,
-            "input_tokens": usage.prompt_tokens if usage else 0,
-            "output_tokens": usage.completion_tokens if usage else 0,
-            "total_tokens": usage.total_tokens if usage else 0,
-        }
+        usage_dict = {"model": self._model, "input_tokens": usage.prompt_tokens if usage else 0, "output_tokens": usage.completion_tokens if usage else 0, "total_tokens": usage.total_tokens if usage else 0}
 
         if choice.finish_reason == "tool_calls" and msg.tool_calls:
             tc = msg.tool_calls[0]
-            action = {
-                "name": tc.function.name,
-                "args": json.loads(tc.function.arguments),
-            }
+            action = {"name": tc.function.name, "args": json.loads(tc.function.arguments)}
             return Reply(thought="", action=action, finish_reason="tool_calls", usage=usage_dict)
 
         return Reply(thought=msg.content or "", action=None, finish_reason=choice.finish_reason or "stop", usage=usage_dict)
