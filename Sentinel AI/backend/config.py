@@ -10,16 +10,19 @@ MODEL_TIERS = {
         {"provider": "openrouter", "reasoning_type": "advanced", "is_preferred": True, "is_free": False},
         {"provider": "cohere", "reasoning_type": "advanced", "is_preferred": False, "is_free": True},
         {"provider": "groq", "reasoning_type": "advanced", "is_preferred": False, "is_free": True},
+        {"provider": "nvidia_nim", "reasoning_type": "advanced", "is_backup": True}
     ],
     "coding": [
         {"provider": "groq", "reasoning_type": "logical", "is_preferred": True, "is_free": True},
         {"provider": "sambanova", "reasoning_type": "logical", "is_preferred": False, "is_free": True},
         {"provider": "openrouter", "reasoning_type": "logical", "is_preferred": False, "is_free": False},
+        {"provider": "nvidia_nim", "reasoning_type": "logical", "is_backup": True}
     ],
     "fast_eval": [
         {"provider": "groq", "reasoning_type": "fast", "is_preferred": True, "is_free": True},
         {"provider": "cerebras", "reasoning_type": "fast", "is_preferred": False, "is_free": True},
         {"provider": "openrouter", "reasoning_type": "fast", "is_preferred": False, "is_free": False},
+        {"provider": "nvidia_nim", "reasoning_type": "fast", "is_backup": True}
     ]
 }
 

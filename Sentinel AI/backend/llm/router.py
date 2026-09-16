@@ -41,6 +41,7 @@ class LLMRouter:
                         "provider": provider,
                         "is_preferred": spec.get("is_preferred", False),
                         "is_free": spec.get("is_free", False),
+                        "is_backup": spec.get("is_backup", False),
                         "usage_count": 0
                     })
 
@@ -74,9 +75,10 @@ class LLMRouter:
     def _sort_providers(self, providers: list[dict[str, Any]]) -> list[dict[str, Any]]:
         providers.sort(
             key=lambda x: (
-                x["is_preferred"],
-                x["is_free"],
-                -x["usage_count"]
+                not x.get("is_backup", False),  # Normal providers (True) sorted before backups (False)
+                x.get("is_preferred", False),
+                x.get("is_free", False),
+                -x.get("usage_count", 0)
             ),
             reverse=True,
         )
