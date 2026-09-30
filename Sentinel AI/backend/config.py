@@ -1,4 +1,4 @@
-﻿import os
+import os
 from pathlib import Path
 from dotenv import load_dotenv
 
@@ -7,21 +7,27 @@ load_dotenv(WORKSPACE_ROOT / ".env")
 
 MODEL_TIERS = {
     "strategic": [
-        {"provider": "openrouter", "reasoning_type": "advanced", "is_preferred": True, "is_free": False},
+        {"provider": "groq", "reasoning_type": "advanced", "is_preferred": True, "is_free": True},
         {"provider": "cohere", "reasoning_type": "advanced", "is_preferred": False, "is_free": True},
-        {"provider": "groq", "reasoning_type": "advanced", "is_preferred": False, "is_free": True},
+        {"provider": "cerebras", "reasoning_type": "advanced", "is_preferred": False, "is_free": True},
+        {"provider": "sambanova", "reasoning_type": "advanced", "is_preferred": False, "is_free": True},
+        {"provider": "openrouter", "reasoning_type": "advanced", "is_backup": True},
         {"provider": "nvidia_nim", "reasoning_type": "advanced", "is_backup": True}
     ],
     "coding": [
         {"provider": "groq", "reasoning_type": "logical", "is_preferred": True, "is_free": True},
         {"provider": "sambanova", "reasoning_type": "logical", "is_preferred": False, "is_free": True},
-        {"provider": "openrouter", "reasoning_type": "logical", "is_preferred": False, "is_free": False},
+        {"provider": "cerebras", "reasoning_type": "logical", "is_preferred": False, "is_free": True},
+        {"provider": "cohere", "reasoning_type": "logical", "is_preferred": False, "is_free": True},
+        {"provider": "openrouter", "reasoning_type": "logical", "is_backup": True},
         {"provider": "nvidia_nim", "reasoning_type": "logical", "is_backup": True}
     ],
     "fast_eval": [
         {"provider": "groq", "reasoning_type": "fast", "is_preferred": True, "is_free": True},
         {"provider": "cerebras", "reasoning_type": "fast", "is_preferred": False, "is_free": True},
-        {"provider": "openrouter", "reasoning_type": "fast", "is_preferred": False, "is_free": False},
+        {"provider": "sambanova", "reasoning_type": "fast", "is_preferred": False, "is_free": True},
+        {"provider": "cohere", "reasoning_type": "fast", "is_preferred": False, "is_free": True},
+        {"provider": "openrouter", "reasoning_type": "fast", "is_backup": True},
         {"provider": "nvidia_nim", "reasoning_type": "fast", "is_backup": True}
     ]
 }

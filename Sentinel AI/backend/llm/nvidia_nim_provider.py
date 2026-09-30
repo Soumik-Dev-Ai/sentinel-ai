@@ -1,16 +1,11 @@
-﻿from __future__ import annotations
+﻿from backend.llm.openai_provider import OpenAIProvider
 from backend import config
-from backend.llm.openai_provider import OpenAIProvider
 
 class NVIDIANIMProvider(OpenAIProvider):
-    BASE_URL = getattr(config, "NVIDIA_NIM_BASE_URL", "https://integrate.api.nvidia.com/v1")
-    def __init__(self, api_key: str | None = None, reasoning_type: str = "advanced", max_tokens: int = 4096):
-        super().__init__(api_key=(api_key or config.NVIDIA_NIM_API_KEY), reasoning_type=reasoning_type, max_tokens=max_tokens)
-        if self._api_key:
-            try:
-                from openai import OpenAI
-                self._client = OpenAI(api_key=self._api_key, base_url=self.BASE_URL)
-            except ImportError:
-                pass
+    def __init__(self, reasoning_type: str = "advanced"):
+        self._base_url = config.NVIDIA_NIM_BASE_URL
+        super().__init__(api_key=config.NVIDIA_NIM_API_KEY, reasoning_type=reasoning_type)
+        
     @property
-    def name(self) -> str: return "nvidia_nim"
+    def name(self) -> str:
+        return "nvidia_nim"

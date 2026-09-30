@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 import json
 from typing import Any
 from backend.llm.contracts import Provider, Reply
@@ -23,29 +23,20 @@ class OpenAIProvider(Provider):
     def _resolve_dynamic_model(self) -> str:
         if self._model: return self._model
         
-        # Hardcoded overrides for providers with strict or retired model names
+        # Hardcoded overrides for providers with massive catalogs or non-standard names
         if self.name == "openrouter":
             self._model = "openrouter/auto"
             return self._model
         if self.name == "cohere":
             self._model = "command-r-plus-08-2024" if self._reasoning_type == "advanced" else "command-r-08-2024"
             return self._model
-        if self.name == "cerebras":
-            self._model = "llama3.1-70b" if self._reasoning_type == "advanced" else "llama3.1-8b"
-            return self._model
-        if self.name == "sambanova":
-            self._model = "Meta-Llama-3.3-70B-Instruct" if self._reasoning_type == "advanced" else "Meta-Llama-3.1-8B-Instruct"
-            return self._model
-        if self.name == "nvidia_nim":
-            self._model = "meta/llama-3.1-70b-instruct" if self._reasoning_type == "advanced" else "meta/llama-3.1-8b-instruct"
-            return self._model
             
-        # Dynamic lookup (only runs for Groq or generic OpenAI endpoints)
+        # Dynamic lookup (runs for Groq, NVIDIA NIM, Cerebras, SambaNova, etc.)
         try:
             if not self._client: return "default-model"
             model_list = self._client.models.list()
-            valid_families = ["llama", "gpt", "claude", "mistral", "qwen", "mixtral"]
-            invalid_families = ["whisper", "dall", "embed", "orpheus", "guard", "vision"]
+            valid_families = ["llama", "gpt", "claude", "mistral", "qwen", "mixtral", "codellama"]
+            invalid_families = ["whisper", "dall", "embed", "orpheus", "guard", "vision", "audio"]
             
             models = []
             for m in model_list.data:
@@ -55,20 +46,34 @@ class OpenAIProvider(Provider):
                     models.append(m.id)
             
             if not models:
-                models = [m.id for m in model_list.data if "embed" not in m.id.lower()]
+                models = [m.id for m in model_list.data if "embed" not in m.id.lower() and "guard" not in m.id.lower()]
 
-            llama_70b = [m for m in models if "llama" in m.lower() and ("70b" in m.lower() or "90b" in m.lower())]
-            llama_8b = [m for m in models if "llama" in m.lower() and ("8b" in m.lower() or "instant" in m.lower())]
+            # Classify models by size indicators in their names
+            heavy_models = [m for m in models if any(size in m.lower() for size in ["70b", "72b", "90b", "120b", "405b", "large", "plus"])]
+            light_models = [m for m in models if any(size in m.lower() for size in ["8b", "7b", "11b", "14b", "27b", "instant", "small", "mini"])]
             
             if self._reasoning_type == "advanced":
-                self._model = llama_70b[0] if llama_70b else models[0]
+                self._model = heavy_models[0] if heavy_models else models[0]
+                self._fallback_models = heavy_models[1:] + light_models + models
             elif self._reasoning_type == "fast":
-                self._model = llama_8b[0] if llama_8b else models[-1]
+                self._model = light_models[0] if light_models else models[-1]
+                self._fallback_models = light_models[1:] + heavy_models + models
             else:
                 self._model = models[0]
+                self._fallback_models = models[1:]
+                
+            # Deduplicate fallbacks, preserving order
+            seen = {self._model}
+            deduped = []
+            for m in self._fallback_models:
+                if m not in seen:
+                    seen.add(m)
+                    deduped.append(m)
+            self._fallback_models = deduped
                     
         except Exception:
             self._model = "default-model"
+            self._fallback_models = []
             
         return self._model
 
@@ -89,9 +94,26 @@ class OpenAIProvider(Provider):
         try:
             resp = self._client.chat.completions.create(**kwargs)
         except Exception as e:
-            if "max_tokens" in str(e).lower():
+            err_str = str(e).lower()
+            if "max_tokens" in err_str:
                 kwargs.pop("max_tokens", None)
                 resp = self._client.chat.completions.create(**kwargs)
+            elif any(x in err_str for x in ["429", "rate limit", "capacity", "quota", "too many requests"]):
+                # Rate limited on primary model. Try fallback models if available!
+                success = False
+                if hasattr(self, "_fallback_models") and self._fallback_models:
+                    for fallback in self._fallback_models:
+                        kwargs["model"] = fallback
+                        try:
+                            resp = self._client.chat.completions.create(**kwargs)
+                            self._model = fallback # permanently switch to the working model
+                            success = True
+                            break
+                        except Exception:
+                            continue
+                
+                if not success:
+                    raise e
             else:
                 raise e
 

@@ -301,6 +301,25 @@ class MultiAgentPipeline:
             line_type="complete",
         )
         ctx.bus.emit("completed", result=result)
+
+        # Persist to SQLite history
+        try:
+            from backend.db.store import insert_run
+            insert_run(
+                run_id=run_id,
+                goal=goal,
+                success=success,
+                steps=len(per_subtask_outputs),
+                corrections=result.get("self_corrections", 0),
+                elapsed=elapsed,
+                provider=self.router.last_successful_provider,
+                tokens=metrics.get("tokens_total", 0),
+                cost=metrics.get("cost_total_usd", 0.0),
+                metadata={"plan_path": plan.get("chosen_path", {}).get("id", "")},
+            )
+        except Exception:
+            pass  # DB failure must not crash the pipeline
+
         return result
 
     # ----------------------------------------------------------------
@@ -691,8 +710,7 @@ class MultiAgentPipeline:
             "plan": plan or {},
             "steps_taken": len(subtasks or []),
             "self_corrections": sum(
-                1 for s in (subtasks or [])
-                if not s.get("resolved") and s.get("agent") != "executor"
+                max(0, s.get("attempts", 1) - 1) for s in (subtasks or [])
             ),
             "errors": [],
             "terminal_logs": [],

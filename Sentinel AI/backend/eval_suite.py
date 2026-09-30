@@ -88,7 +88,7 @@ def run_evaluation_suite(report_dir: Path | str, on_progress: Any = None, custom
     
     def run_single_eval(goal_data: dict[str, Any], self_correction_enabled: bool) -> dict[str, Any]:
         workspace = Path(mkdtemp(prefix=f"eval_ws_{goal_data['id']}_"))
-        if goal_data["input"]:
+        if goal_data.get("input"):
             (workspace / "input.txt").write_text(goal_data["input"], encoding="utf-8")
             
         start_time = time.time()
@@ -106,7 +106,7 @@ def run_evaluation_suite(report_dir: Path | str, on_progress: Any = None, custom
                 goal=goal_data["spec"], 
                 acceptance=[], 
                 workspace=workspace, 
-                input_text=goal_data["input"]
+                input_text=goal_data.get("input", "")
             )
             elapsed = time.time() - start_time
             
@@ -162,7 +162,7 @@ def run_evaluation_suite(report_dir: Path | str, on_progress: Any = None, custom
         
         return run_result
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
         futures = []
         for goal_data in goals_to_run:
             for sc in [False, True]:

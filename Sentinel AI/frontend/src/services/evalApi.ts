@@ -27,3 +27,11 @@ export async function getEvaluationDetails(runName: string) {
   const res = await fetch(`${API_BASE}/api/evaluations/${runName}`, { cache: 'no-store' });
   return res.json();
 }
+
+export async function getRunHistory(limit = 50, offset = 0) {
+  const res = await fetch(
+    `${API_BASE}/api/history?limit=${limit}&offset=${offset}`,
+    { cache: "no-store" }
+  );
+  return res.json();
+}

@@ -62,6 +62,28 @@ class Executor(Agent):
             tool = RunPythonTool(workspace=ctx.workspace)
             args = {"path": filename, "timeout": 30}
 
+        # --- Safety guardrails ---
+        from backend.safety.guardrails import scan as safety_scan
+
+        code_path = ctx.workspace / filename
+        if code_path.exists():
+            source = code_path.read_text(encoding="utf-8")
+            violations = safety_scan(source)
+            critical = [v for v in violations if v.severity == "critical"]
+            if critical:
+                ctx.bus.emit(
+                    "terminal_line",
+                    text=f"[SAFETY] BLOCKED {filename}: {len(critical)} critical violation(s): "
+                         + ", ".join(f"L{v.line}: {v.pattern}" for v in critical[:3]),
+                    line_type="error",
+                )
+                self.update_graph_node(ctx, node_id, status="error",
+                                       meta={"safety_violations": len(critical)})
+                return fail(
+                    "safety_violation",
+                    violations=[v.to_dict() for v in critical],
+                )
+
         raw = tool.invoke(args)
 
         if not raw.get("ok"):

@@ -86,6 +86,15 @@ _EXTERNAL_ERRORS = {
 
 def classify(execution_result: dict[str, Any]) -> Failure:
     """Build a `Failure` from the executor's result envelope."""
+    if "safety_violation" in str(execution_result.get("reason", "")) or "safety_violation" in str(execution_result.get("error_type", "")):
+        return Failure(
+            category=FailureCategory.LOGIC,  # treat as logic error → full rewrite
+            exception="SafetyViolation",
+            stderr="Code contains dangerous patterns. Rewrite without: " + 
+                   ", ".join(v["pattern"] for v in execution_result.get("violations", [])[:3]),
+            line=None,
+        )
+
     parsed = execution_result.get("parsed_traceback") or {}
     exception = str(parsed.get("exception") or "")
     line = parsed.get("line")

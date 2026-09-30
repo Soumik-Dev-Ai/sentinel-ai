@@ -167,36 +167,46 @@ class Agent:
         stream: bool = True,
     ) -> Reply:
         """Wrap router.chat with telemetry + cost tracking."""
-        reply = ctx.router.chat(
-            messages,
-            tools=tools,
-            stream_callback=(self._make_stream_cb(ctx) if stream else None),
+        from backend.telemetry.tracing import agent_span
+        with agent_span(
+            self.name,
+            subtask_id=ctx.subtask_id,
             model_tier=ctx.model_tier,
-        )
-        # Use the router's tracked last-successful provider/model (streaming
-        # providers frequently return empty usage dicts, so we rely on the
-        # router itself to tell us who answered).
-        provider_name = ctx.router.last_successful_provider or ""
-        model_name = ctx.router.last_successful_model or ""
-        usage = reply.usage or {}
-        if usage:
-            model_name = usage.get("model", model_name or "default")
-            provider_name = usage.get("provider", provider_name or "router")
-        else:
-            # Fallback token estimate when provider omits usage stats.
-            in_toks = self._estimate_tokens(messages)
-            out_toks = max(1, len((reply.thought or "").split()))
-            usage = {
-                "input_tokens": in_toks, "output_tokens": out_toks,
-                "model": model_name, "provider": provider_name,
-            }
-        ctx.cost.record_from_reply(
-            agent=self.name,
-            provider=provider_name or model_name,
-            model=model_name or "default",
-            reply_usage=usage,
-        )
-        return reply
+        ) as span:
+            reply = ctx.router.chat(
+                messages,
+                tools=tools,
+                stream_callback=(self._make_stream_cb(ctx) if stream else None),
+                model_tier=ctx.model_tier,
+            )
+            # Use the router's tracked last-successful provider/model (streaming
+            # providers frequently return empty usage dicts, so we rely on the
+            # router itself to tell us who answered).
+            provider_name = ctx.router.last_successful_provider or ""
+            model_name = ctx.router.last_successful_model or ""
+            usage = reply.usage or {}
+            if usage:
+                model_name = usage.get("model", model_name or "default")
+                provider_name = usage.get("provider", provider_name or "router")
+            else:
+                # Fallback token estimate when provider omits usage stats.
+                in_toks = self._estimate_tokens(messages)
+                out_toks = max(1, len((reply.thought or "").split()))
+                usage = {
+                    "input_tokens": in_toks, "output_tokens": out_toks,
+                    "model": model_name, "provider": provider_name,
+                }
+            ctx.cost.record_from_reply(
+                agent=self.name,
+                provider=provider_name or model_name,
+                model=model_name or "default",
+                reply_usage=usage,
+            )
+            span.set_attribute("provider", provider_name or model_name)
+            span.set_attribute("model", model_name or "default")
+            span.set_attribute("tokens.input", usage.get("input_tokens", 0))
+            span.set_attribute("tokens.output", usage.get("output_tokens", 0))
+            return reply
 
     def _estimate_tokens(self, messages: list[dict[str, Any]]) -> int:
         """Rough token estimate when the provider omits usage stats."""

@@ -56,13 +56,29 @@ export const EvaluationLab: React.FC<{ onExit?: () => void }> = ({ onExit }) => 
         const text = await file.text();
         customGoals = JSON.parse(text);
       } else if (inputType === "text" && customText.trim()) {
-        // Parse textarea lines into goals
-        const lines = customText.split('\n').filter(l => l.trim().length > 0);
-        customGoals = lines.map((line, idx) => ({
-          id: `custom_goal_${idx + 1}`,
-          spec: line.trim(),
-          input: ""
-        }));
+        const trimmed = customText.trim();
+        if (trimmed.startsWith("[") || trimmed.startsWith("{")) {
+          try {
+            const parsed = JSON.parse(trimmed);
+            customGoals = Array.isArray(parsed) ? parsed : [parsed];
+          } catch (err) {
+            // Fallback to line-by-line if JSON parse fails
+            const lines = trimmed.split('\n').filter(l => l.trim().length > 0);
+            customGoals = lines.map((line, idx) => ({
+              id: `custom_goal_${idx + 1}`,
+              spec: line.trim(),
+              input: ""
+            }));
+          }
+        } else {
+          // Parse textarea lines into goals
+          const lines = trimmed.split('\n').filter(l => l.trim().length > 0);
+          customGoals = lines.map((line, idx) => ({
+            id: `custom_goal_${idx + 1}`,
+            spec: line.trim(),
+            input: ""
+          }));
+        }
       }
       
       await runEvaluation(customGoals);
@@ -92,15 +108,46 @@ export const EvaluationLab: React.FC<{ onExit?: () => void }> = ({ onExit }) => 
     const base = selectedReport.metrics_baseline;
     const sc = selectedReport.metrics_with_self_correction;
     
-    let md = `# Evaluation Report: ${selectedReport.run_name}\n\n`;
+    let md = `# Sentinel AI — Evaluation Report\n`;
+    md += `**Run:** ${selectedReport.run_name}  \n`;
+    md += `**Date:** ${new Date(selectedReport.timestamp * 1000).toISOString()}  \n`;
+    md += `**Total Goals:** ${selectedReport.total_goals}\n\n`;
+
     md += `## Performance Summary\n`;
-    md += `| Metric | Baseline | Self-Correction ON | Performance Change |\n`;
+    md += `| Metric | Baseline (SC OFF) | Self-Correction ON | Delta |\n`;
     md += `|---|---|---|---|\n`;
-    md += `| Completion Rate | ${(base.completion_rate * 100).toFixed(1)}% | ${(sc.completion_rate * 100).toFixed(1)}% | ${((sc.completion_rate - base.completion_rate) * 100).toFixed(1)}% |\n`;
+    md += `| Completion Rate | ${(base.completion_rate * 100).toFixed(1)}% | ${(sc.completion_rate * 100).toFixed(1)}% | +${((sc.completion_rate - base.completion_rate) * 100).toFixed(1)}% |\n`;
     md += `| Avg Steps | ${base.avg_steps.toFixed(2)} | ${sc.avg_steps.toFixed(2)} | ${(sc.avg_steps - base.avg_steps).toFixed(2)} |\n`;
     md += `| Total Corrections | ${base.total_self_corrections} | ${sc.total_self_corrections} | ${sc.total_self_corrections > base.total_self_corrections ? '+' : ''}${sc.total_self_corrections - base.total_self_corrections} |\n`;
     md += `| Avg Time (s) | ${base.avg_elapsed.toFixed(2)} | ${sc.avg_elapsed.toFixed(2)} | ${(sc.avg_elapsed - base.avg_elapsed).toFixed(2)} |\n\n`;
-    
+
+    // Per-goal breakdown
+    if (selectedReport.detailed_runs?.length) {
+      md += `## Per-Goal Breakdown\n`;
+      md += `| Goal ID | SC OFF | SC ON | Steps (OFF) | Steps (ON) | Corrections |\n`;
+      md += `|---|---|---|---|---|---|\n`;
+      
+      const byGoal: Record<string, any> = {};
+      for (const run of selectedReport.detailed_runs) {
+        if (!byGoal[run.goal_id]) byGoal[run.goal_id] = {};
+        byGoal[run.goal_id][run.self_correction_enabled ? "on" : "off"] = run;
+      }
+      for (const [goalId, runs] of Object.entries(byGoal) as any) {
+        const off = runs.off || {};
+        const on = runs.on || {};
+        md += `| ${goalId} | ${off.success ? '✅' : '❌'} | ${on.success ? '✅' : '❌'} | ${off.steps ?? '-'} | ${on.steps ?? '-'} | ${on.self_corrections ?? 0} |\n`;
+      }
+      md += `\n`;
+    }
+
+    // Methodology
+    md += `## Methodology\n`;
+    md += `- Each goal is run **twice**: once with self-correction disabled (baseline) and once enabled\n`;
+    md += `- Self-correction uses a Coder → Critic → Executor loop with up to 3 retries per subtask\n`;
+    md += `- Critic threshold: 80/100 (LLM-as-a-Judge scoring)\n`;
+    md += `- Escalation triggers at confidence < 0.50 after 2+ retries\n`;
+    md += `- LLM routing: 6 providers (Groq, SambaNova, Cohere, Cerebras, OpenRouter, NVIDIA NIM)\n\n`;
+
     md += `## Raw Report JSON\n`;
     md += "```json\n" + JSON.stringify(selectedReport, null, 2) + "\n```";
 

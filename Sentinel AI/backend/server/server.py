@@ -509,3 +509,9 @@ def get_evaluation(run_name: str) -> dict[str, Any]:
         return summary
     except Exception as e:
         return {"error": str(e)}
+
+@app.get('/api/history')
+def get_run_history(limit: int = 50, offset: int = 0) -> list[dict[str, Any]]:
+    from backend.db.store import list_runs
+    return list_runs(limit=limit, offset=offset)
+
