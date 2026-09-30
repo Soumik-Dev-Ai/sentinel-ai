@@ -98,8 +98,8 @@ class OpenAIProvider(Provider):
             if "max_tokens" in err_str:
                 kwargs.pop("max_tokens", None)
                 resp = self._client.chat.completions.create(**kwargs)
-            elif any(x in err_str for x in ["429", "rate limit", "capacity", "quota", "too many requests"]):
-                # Rate limited on primary model. Try fallback models if available!
+            elif any(x in err_str for x in ["429", "rate limit", "capacity", "quota", "too many requests", "404", "not found"]):
+                # Rate limited or model locked. Try fallback models if available!
                 success = False
                 if hasattr(self, "_fallback_models") and self._fallback_models:
                     for fallback in self._fallback_models:
