@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import concurrent.futures
 import time
@@ -24,26 +24,37 @@ def _sanitize(msg: str) -> str:
 
 
 class LLMRouter:
-    def __init__(self, provider_timeout: int | None = None):
+    def __init__(self, provider_timeout: int | None = None, providers: list[Provider] | None = None):
         self._provider_timeout = provider_timeout or config.PROVIDER_TIMEOUT_SECONDS
         self._provider_events: list[dict[str, Any]] = []
         self._executor = concurrent.futures.ThreadPoolExecutor(max_workers=2)
         self._last_successful_provider: str = ""
         self._last_successful_model: str = ""
-        
+
         self._tier_providers: dict[str, list[dict[str, Any]]] = {}
-        for tier, models in config.MODEL_TIERS.items():
-            self._tier_providers[tier] = []
-            for spec in models:
-                provider = self._make_provider(spec["provider"], spec.get("reasoning_type", "logical"))
-                if provider is not None:
-                    self._tier_providers[tier].append({
-                        "provider": provider,
-                        "is_preferred": spec.get("is_preferred", False),
-                        "is_free": spec.get("is_free", False),
-                        "is_backup": spec.get("is_backup", False),
-                        "usage_count": 0
-                    })
+        if providers is not None:
+            # Explicit (mock) chain: seed the default tier, skip config.
+            self._tier_providers["strategic"] = [
+                {"provider": p, "is_preferred": True, "is_free": True, "is_backup": False, "usage_count": 0}
+                for p in providers
+            ]
+        else:
+            for tier, models in config.MODEL_TIERS.items():
+                self._tier_providers[tier] = []
+                for spec in models:
+                    provider = self._make_provider(spec["provider"], spec.get("reasoning_type", "logical"))
+                    if provider is not None:
+                        self._tier_providers[tier].append({
+                            "provider": provider,
+                            "is_preferred": spec.get("is_preferred", False),
+                            "is_free": spec.get("is_free", False),
+                            "is_backup": spec.get("is_backup", False),
+                            "usage_count": 0
+                        })
+        # Legacy flat view (manual_test.py / server react mode / agent_cli.py).
+        self._providers = [
+            spec["provider"] for specs in self._tier_providers.values() for spec in specs
+        ]
 
     def __del__(self) -> None:
         executor = getattr(self, "_executor", None)
@@ -51,26 +62,27 @@ class LLMRouter:
             executor.shutdown(wait=False)
 
     @staticmethod
-    def _make_provider(name: str, reasoning_type: str) -> Provider | None:
-        if name == "groq":
-            from backend.llm.groq_provider import GroqProvider
-            return GroqProvider(reasoning_type=reasoning_type)
-        if name == "nvidia_nim":
-            from backend.llm.nvidia_nim_provider import NVIDIANIMProvider
-            return NVIDIANIMProvider(reasoning_type=reasoning_type)
-        if name == "openrouter":
-            from backend.llm.openrouter_provider import OpenRouterProvider
-            return OpenRouterProvider(reasoning_type=reasoning_type)
-        if name == "cerebras":
-            from backend.llm.cerebras_provider import CerebrasProvider
-            return CerebrasProvider(reasoning_type=reasoning_type)
-        if name == "sambanova":
-            from backend.llm.sambanova_provider import SambaNovaProvider
-            return SambaNovaProvider(reasoning_type=reasoning_type)
-        if name == "cohere":
-            from backend.llm.cohere_provider import CohereProvider
-            return CohereProvider(reasoning_type=reasoning_type)
-        return None
+    def _make_provider(name: str, reasoning_type: str = "logical", model: str | None = None) -> Provider | None:
+        def _mk(module: str, cls_name: str) -> Provider:
+            import importlib
+            cls = getattr(importlib.import_module(f"backend.llm.{module}"), cls_name)
+            p = cls(reasoning_type=reasoning_type)
+            if model:
+                p._model = model
+            return p
+
+        factories = {
+            "groq": ("groq_provider", "GroqProvider"),
+            "nvidia_nim": ("nvidia_nim_provider", "NVIDIANIMProvider"),
+            "openrouter": ("openrouter_provider", "OpenRouterProvider"),
+            "cerebras": ("cerebras_provider", "CerebrasProvider"),
+            "sambanova": ("sambanova_provider", "SambaNovaProvider"),
+            "opencode": ("opencode_provider", "OpenCodeProvider"),
+            "cohere": ("cohere_provider", "CohereProvider"),
+        }
+        if name not in factories:
+            return None
+        return _mk(*factories[name])
 
     def _sort_providers(self, providers: list[dict[str, Any]]) -> list[dict[str, Any]]:
         providers.sort(
@@ -84,10 +96,10 @@ class LLMRouter:
         )
         return providers
 
-    def chat(self, messages: list[dict[str, Any]], tools: list[dict[str, Any]] | None = None, response_schema: dict[str, Any] | None = None, stream_callback: Any = None, model_tier: str = "coding") -> Reply:
+    def chat(self, messages: list[dict[str, Any]], tools: list[dict[str, Any]] | None = None, response_schema: dict[str, Any] | None = None, stream_callback: Any = None, model_tier: str = "strategic") -> Reply:
         tier_list = self._tier_providers.get(model_tier, [])
         if not tier_list:
-            raise ValueError(f"No providers configured for tier '{model_tier}'")
+            raise RuntimeError(f"All providers in tier '{model_tier}' exhausted. Chain of failures: none configured")
 
         sorted_list = self._sort_providers(tier_list)
         error_chain = []
@@ -107,13 +119,7 @@ class LLMRouter:
                     stream_callback,
                 )
                 reply = future.result(timeout=self._provider_timeout)
-                
-                self._provider_events.append({
-                    "ts": time.time(),
-                    "from": provider_inst.name,
-                    "to": "success",
-                    "latency": time.time() - start_t
-                })
+
                 p["usage_count"] += 1
                 self._last_successful_provider = provider_inst.name
                 self._last_successful_model = getattr(provider_inst, "_model", "dynamic")

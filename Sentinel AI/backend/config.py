@@ -8,6 +8,7 @@ load_dotenv(WORKSPACE_ROOT / ".env")
 MODEL_TIERS = {
     "strategic": [
         {"provider": "groq", "reasoning_type": "advanced", "is_preferred": True, "is_free": True},
+        {"provider": "opencode", "reasoning_type": "advanced", "is_preferred": False, "is_free": True},
         {"provider": "cohere", "reasoning_type": "advanced", "is_preferred": False, "is_free": True},
         {"provider": "cerebras", "reasoning_type": "advanced", "is_preferred": False, "is_free": True},
         {"provider": "sambanova", "reasoning_type": "advanced", "is_preferred": False, "is_free": True},
@@ -16,6 +17,7 @@ MODEL_TIERS = {
     ],
     "coding": [
         {"provider": "groq", "reasoning_type": "logical", "is_preferred": True, "is_free": True},
+        {"provider": "opencode", "reasoning_type": "logical", "is_preferred": False, "is_free": True},
         {"provider": "sambanova", "reasoning_type": "logical", "is_preferred": False, "is_free": True},
         {"provider": "cerebras", "reasoning_type": "logical", "is_preferred": False, "is_free": True},
         {"provider": "cohere", "reasoning_type": "logical", "is_preferred": False, "is_free": True},
@@ -24,6 +26,7 @@ MODEL_TIERS = {
     ],
     "fast_eval": [
         {"provider": "groq", "reasoning_type": "fast", "is_preferred": True, "is_free": True},
+        {"provider": "opencode", "reasoning_type": "fast", "is_preferred": False, "is_free": True},
         {"provider": "cerebras", "reasoning_type": "fast", "is_preferred": False, "is_free": True},
         {"provider": "sambanova", "reasoning_type": "fast", "is_preferred": False, "is_free": True},
         {"provider": "cohere", "reasoning_type": "fast", "is_preferred": False, "is_free": True},
@@ -34,6 +37,9 @@ MODEL_TIERS = {
 
 EVAL_REPORTS_DIR = WORKSPACE_ROOT / "eval" / "reports"
 PROVIDER_TIMEOUT_SECONDS = 60
+
+# Ordered fallback chain (derived from the strategic tier) — legacy e2e API.
+LLM_CHAIN = [spec["provider"] for spec in MODEL_TIERS["strategic"]]
 
 # Restored Original Variables
 RECOVERY_BUDGET_PER_SUBTASK = int(os.getenv("RECOVERY_BUDGET_PER_SUBTASK", "3"))
@@ -49,3 +55,5 @@ GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
 CEREBRAS_API_KEY = os.getenv("CEREBRAS_API_KEY", "")
 SAMBANOVA_API_KEY = os.getenv("SAMBANOVA_API_KEY", "")
 NVIDIA_NIM_API_KEY = os.getenv("NVIDIA_NIM_API_KEY", "")
+OPEN_CODE_API_KEY = os.getenv("OPEN_CODE_API_KEY", "")
+OPEN_CODE_BASE_URL = os.getenv("OPEN_CODE_BASE_URL", "https://opencode.ai/inference/openai/v1")
