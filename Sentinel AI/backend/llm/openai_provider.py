@@ -48,7 +48,7 @@ class OpenAIProvider(Provider):
         try:
             if not self._client: return "default-model"
             model_list = self._client.models.list()
-            valid_families = ["llama", "gpt", "claude", "mistral", "qwen", "mixtral", "codellama"]
+            valid_families = ["llama", "gpt", "claude", "mistral", "qwen", "mixtral", "codellama", "nemotron", "gemma", "phi", "deepseek"]
             invalid_families = ["whisper", "dall", "embed", "orpheus", "guard", "vision", "audio"]
             
             if self.name == "openrouter":
