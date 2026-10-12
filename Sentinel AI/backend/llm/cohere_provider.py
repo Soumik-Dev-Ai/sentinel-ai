@@ -44,8 +44,18 @@ class CohereProvider(Provider):
             
         return self._model
 
+    _last_call_time: float = 0.0
+
     def chat(self, messages: list[dict[str, Any]], tools: Optional[list[dict[str, Any]]] = None, response_schema: Optional[dict[str, Any]] = None, stream_callback: Any = None) -> Reply:
         if not self._api_key: raise RuntimeError("COHERE_API_KEY is not set.")
+        
+        # Enforce rate-limit throttle (Cohere free tier: 10 RPM -> 1 request every 6s)
+        import time
+        now = time.time()
+        elapsed = now - CohereProvider._last_call_time
+        if elapsed < 6.0:
+            time.sleep(6.0 - elapsed)
+        CohereProvider._last_call_time = time.time()
         
         chat_history = []
         message = ""
@@ -63,9 +73,13 @@ class CohereProvider(Provider):
         
         while True:
             payload = {"model": self._model, "message": message, "chat_history": chat_history}
-            resp = requests.post(self.BASE_URL, json=payload, headers=headers, timeout=120)
+            resp = requests.post(self.BASE_URL, json=payload, headers=headers, timeout=60)
             
-            if resp.status_code in [429, 400, 403, 404, 402, 500, 503]:
+            # Account-level rate limit: do not hammer fallback models on the same key!
+            if resp.status_code == 429:
+                raise RuntimeError("cohere rate limited (429 Too Many Requests); backing off to next provider")
+                
+            if resp.status_code in [400, 403, 404, 402, 500, 503]:
                 if hasattr(self, "_fallback_models") and self._fallback_models:
                     self._model = self._fallback_models.pop(0)
                     continue

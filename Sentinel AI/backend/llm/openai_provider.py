@@ -27,7 +27,7 @@ class OpenAIProvider(Provider):
                 self._client = OpenAI(
                     api_key=self._api_key,
                     base_url=self._base_url or self.BASE_URL,
-                    timeout=config.PROVIDER_TIMEOUT_SECONDS,
+                    timeout=getattr(config, "PROVIDER_CALL_TIMEOUT_SECONDS", 35),
                 )
             except ImportError:
                 pass
@@ -67,7 +67,7 @@ class OpenAIProvider(Provider):
 
             # Classify models by size indicators in their names
             heavy_models = [m for m in models if any(size in m.lower() for size in ["70b", "72b", "90b", "120b", "405b", "large", "plus"])]
-            light_models = [m for m in models if any(size in m.lower() for size in ["8b", "7b", "11b", "14b", "27b", "instant", "small", "mini"])]
+            light_models = [m for m in models if any(size in m.lower() for size in ["8b", "7b", "11b", "14b", "27b", "31b", "32b", "33b", "instant", "small", "mini"])]
             
             if self._reasoning_type == "advanced":
                 self._model = heavy_models[0] if heavy_models else models[0]
@@ -129,7 +129,7 @@ class OpenAIProvider(Provider):
                     err_str = str(e2).lower()
             
             if "resp" not in locals():
-                if any(x in err_str for x in ["429", "rate limit", "capacity", "quota", "too many requests", "404", "not found", "402", "insufficient credits", "payment required", "403", "permission denied", "disabled", "400", "unavailable"]):
+                if any(x in err_str for x in ["429", "rate limit", "capacity", "quota", "too many requests", "404", "not found", "402", "insufficient credits", "payment required", "403", "permission denied", "disabled", "400", "unavailable", "timeout", "timed out", "timedout"]):
                     
                     # Reactive backoff
                     if "429" in err_str or "rate limit" in err_str:

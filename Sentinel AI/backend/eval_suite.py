@@ -94,8 +94,11 @@ def run_evaluation_suite(report_dir: Path | str, on_progress: Any = None, custom
         start_time = time.time()
         try:
             from backend.orchestrator.pipeline import MultiAgentPipeline
-            
+            from backend.orchestrator.escalation import EscalationManager
+
             pipeline = MultiAgentPipeline(
+                router=LLMRouter(provider_timeout=getattr(config, "PROVIDER_TIMEOUT_SECONDS", 90)),
+                escalation=EscalationManager(timeout_seconds=10),
                 config={
                     "max_retries_per_subtask": 3 if self_correction_enabled else 1,
                     "budget": 1000
@@ -162,7 +165,8 @@ def run_evaluation_suite(report_dir: Path | str, on_progress: Any = None, custom
         
         return run_result
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
+    # Sequential: free-tier rate limits (TPD/tokens-per-min) break under burst load.
+    with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
         futures = []
         for goal_data in goals_to_run:
             for sc in [False, True]:

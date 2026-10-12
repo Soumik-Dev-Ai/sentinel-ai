@@ -9,34 +9,35 @@ MODEL_TIERS = {
     "strategic": [
         {"provider": "groq", "reasoning_type": "advanced", "is_preferred": True, "is_free": True},
         {"provider": "opencode", "reasoning_type": "advanced", "is_preferred": False, "is_free": True},
-        {"provider": "cohere", "reasoning_type": "advanced", "is_preferred": False, "is_free": True},
-        {"provider": "cerebras", "reasoning_type": "advanced", "is_preferred": False, "is_free": True},
         {"provider": "sambanova", "reasoning_type": "advanced", "is_preferred": False, "is_free": True},
-        {"provider": "openrouter", "reasoning_type": "advanced", "is_backup": True},
-        {"provider": "nvidia_nim", "reasoning_type": "advanced", "is_backup": True}
+        {"provider": "nvidia_nim", "reasoning_type": "advanced", "is_preferred": False, "is_free": True},
+        {"provider": "cerebras", "reasoning_type": "advanced", "is_preferred": False, "is_free": True},
+        {"provider": "cohere", "reasoning_type": "advanced", "is_backup": True},
+        {"provider": "openrouter", "reasoning_type": "advanced", "is_backup": True}
     ],
     "coding": [
         {"provider": "groq", "reasoning_type": "logical", "is_preferred": True, "is_free": True},
         {"provider": "opencode", "reasoning_type": "logical", "is_preferred": False, "is_free": True},
         {"provider": "sambanova", "reasoning_type": "logical", "is_preferred": False, "is_free": True},
+        {"provider": "nvidia_nim", "reasoning_type": "logical", "is_preferred": False, "is_free": True},
         {"provider": "cerebras", "reasoning_type": "logical", "is_preferred": False, "is_free": True},
-        {"provider": "cohere", "reasoning_type": "logical", "is_preferred": False, "is_free": True},
-        {"provider": "openrouter", "reasoning_type": "logical", "is_backup": True},
-        {"provider": "nvidia_nim", "reasoning_type": "logical", "is_backup": True}
+        {"provider": "cohere", "reasoning_type": "logical", "is_backup": True},
+        {"provider": "openrouter", "reasoning_type": "logical", "is_backup": True}
     ],
     "fast_eval": [
         {"provider": "groq", "reasoning_type": "fast", "is_preferred": True, "is_free": True},
         {"provider": "opencode", "reasoning_type": "fast", "is_preferred": False, "is_free": True},
-        {"provider": "cerebras", "reasoning_type": "fast", "is_preferred": False, "is_free": True},
         {"provider": "sambanova", "reasoning_type": "fast", "is_preferred": False, "is_free": True},
-        {"provider": "cohere", "reasoning_type": "fast", "is_preferred": False, "is_free": True},
-        {"provider": "openrouter", "reasoning_type": "fast", "is_backup": True},
-        {"provider": "nvidia_nim", "reasoning_type": "fast", "is_backup": True}
+        {"provider": "nvidia_nim", "reasoning_type": "fast", "is_preferred": False, "is_free": True},
+        {"provider": "cerebras", "reasoning_type": "fast", "is_preferred": False, "is_free": True},
+        {"provider": "cohere", "reasoning_type": "fast", "is_backup": True},
+        {"provider": "openrouter", "reasoning_type": "fast", "is_backup": True}
     ]
 }
 
 EVAL_REPORTS_DIR = WORKSPACE_ROOT / "eval" / "reports"
-PROVIDER_TIMEOUT_SECONDS = 60
+PROVIDER_TIMEOUT_SECONDS = 90
+PROVIDER_CALL_TIMEOUT_SECONDS = 35
 
 # Ordered fallback chain (derived from the strategic tier) — legacy e2e API.
 LLM_CHAIN = [spec["provider"] for spec in MODEL_TIERS["strategic"]]
