@@ -221,7 +221,7 @@ const FinalContent: React.FC<{ report: string }> = ({ report }) => {
           <div className="w-2.5 h-2.5 rounded-full" style={{ background: "hsl(var(--primary))", opacity: 0.4 }} />
           <div className="w-2.5 h-2.5 rounded-full" style={{ background: "hsl(var(--primary))", opacity: 0.2 }} />
         </div>
-        <span className="text-[10px] uppercase tracking-widest text-[hsl(var(--primary))] ml-2 font-medium">Agent Report â€” Complete</span>
+        <span className="text-[10px] uppercase tracking-widest text-[hsl(var(--primary))] ml-2 font-medium">Agent Report — Complete</span>
       </div>
       <div className="flex-1 overflow-y-auto px-4 py-6 md:px-6 md:py-8" style={{ background: "hsl(0, 0%, 5%)" }}>
         <div className="space-y-4 text-sm text-[hsl(var(--foreground))] font-light leading-relaxed">
@@ -242,7 +242,7 @@ const FinalContent: React.FC<{ report: string }> = ({ report }) => {
 };
 
 /* =====================================================================
-   AgentWorkspace â€” full lifecycle driven by hook state
+   AgentWorkspace — full lifecycle driven by hook state
    ===================================================================== */
 type WorkPhase = "RUNNING" | "DONE" | "MERGED";
 
@@ -564,7 +564,7 @@ export const AgentWorkspace: React.FC<AgentWorkspaceProps> = ({
             >
               <div className="w-2 h-2 rounded-full bg-[hsl(var(--primary))]" />
               <span className="text-[10px] uppercase tracking-widest text-[hsl(var(--muted-foreground))]">
-                Sentinel AI 2.0 â€¢ Multi-Agent System
+                Sentinel AI 2.0 • Multi-Agent System
               </span>
             </motion.div>
           )}
