@@ -151,11 +151,11 @@ export const EvaluationLab: React.FC<{ onExit?: () => void }> = ({ onExit }) => 
     md += `## Raw Report JSON\n`;
     md += "```json\n" + JSON.stringify(selectedReport, null, 2) + "\n```";
 
-    const blob = new Blob([md], { type: "text/markdown" });
+    const blob = new Blob([md], { type: "text/plain" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `${selectedReport.run_name}_performance_analysis.md`;
+    a.download = `${selectedReport.run_name}_performance_analysis.txt`;
     a.click();
     URL.revokeObjectURL(url);
   };

@@ -1,4 +1,14 @@
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8000";
+function getApiBase(): string {
+  if (typeof window !== "undefined") {
+    const h = window.location.hostname;
+    if (h === "localhost" || h === "127.0.0.1") return "http://localhost:8000";
+    if (import.meta.env.VITE_API_URL) return import.meta.env.VITE_API_URL;
+    return `${window.location.protocol}//${window.location.host}`;
+  }
+  return import.meta.env.VITE_API_URL || "http://localhost:8000";
+}
+
+const API_BASE = getApiBase();
 
 export async function runEvaluation(customGoals?: any) {
   const options: RequestInit = { 

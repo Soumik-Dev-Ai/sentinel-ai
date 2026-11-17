@@ -14,7 +14,18 @@ import type {
   MemoryActivity,
 } from "../types/multiagent";
 
-const WS_URL = import.meta.env.VITE_WS_URL || "ws://localhost:8000/ws/run";
+function getWsUrl(): string {
+  if (typeof window !== "undefined") {
+    const h = window.location.hostname;
+    if (h === "localhost" || h === "127.0.0.1") return "ws://localhost:8000/ws/run";
+    if (import.meta.env.VITE_WS_URL) return import.meta.env.VITE_WS_URL;
+    const proto = window.location.protocol === "https:" ? "wss:" : "ws:";
+    return `${proto}//${window.location.host}/ws/run`;
+  }
+  return import.meta.env.VITE_WS_URL || "ws://localhost:8000/ws/run";
+}
+
+const WS_URL = getWsUrl();
 
 export type AgentPhase = "idle" | "running" | "done" | "error";
 
@@ -465,6 +476,7 @@ export function useAgentSocket(
       }
 
       case "code_written": {
+        setError(null);
         const path = msg.path || "unknown";
         const content: string = msg.content || "";
         setCodeLines([
@@ -672,6 +684,9 @@ export function useAgentSocket(
         }
         setFinalReport(finalOut);
         setPhase("done");
+        if (r.success) {
+          setError(null);
+        }
         setStartedAt(null);
         break;
       }

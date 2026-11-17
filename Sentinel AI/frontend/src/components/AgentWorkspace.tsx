@@ -210,7 +210,7 @@ const TerminalBox: React.FC<{ lines: TerminalLine[]; running: boolean }> = ({ li
   );
 };
 /* =====================================================================
-   FinalContent â€” Typewriter final output
+   FinalContent — Typewriter final output
    ===================================================================== */
 const FinalContent: React.FC<{ report: string }> = ({ report }) => {
   return (
@@ -368,7 +368,7 @@ export const AgentWorkspace: React.FC<AgentWorkspaceProps> = ({
           </button>
         )}
         <p className="text-[10px] uppercase tracking-widest text-[hsl(var(--muted-foreground))] mb-1">
-          {isMerged ? "Final Report" : "Processing Goal Â· Multi-Agent v2"}
+          {isMerged ? "Final Report" : "Processing Goal • Multi-Agent v2"}
         </p>
         <p className="text-sm text-[hsl(var(--foreground))] font-light max-w-lg truncate">
           "{goal}"
