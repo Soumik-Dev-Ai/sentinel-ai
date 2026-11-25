@@ -60,3 +60,7 @@ SAMBANOVA_API_KEY = os.getenv("SAMBANOVA_API_KEY", "")
 NVIDIA_NIM_API_KEY = os.getenv("NVIDIA_NIM_API_KEY", "")
 OPEN_CODE_API_KEY = os.getenv("OPEN_CODE_API_KEY", "")
 OPEN_CODE_BASE_URL = os.getenv("OPEN_CODE_BASE_URL", "https://opencode.ai/inference/openai/v1")
+
+# Turso (libSQL) Remote Storage (optional — falls back to local SQLite/FAISS)
+TURSO_DATABASE_URL = os.getenv("TURSO_DATABASE_URL", "")
+TURSO_AUTH_TOKEN = os.getenv("TURSO_AUTH_TOKEN", "")
