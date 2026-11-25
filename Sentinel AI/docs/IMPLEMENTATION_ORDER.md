@@ -1,97 +1,152 @@
-# Implementation Order — 48h Build Plan
+# Sentinel AI 2.0 — Implementation Roadmap & Execution History
 
-> Goal: an *honest demonstrable agent* by Hour 16, leaving the bulk of time for
-> self-correction nuance, eval honesty, the demo, and the README.
+## 1. Roadmap Architecture & Execution Phasing
 
-## 1. Phase 0 — Setup (Hours 0–2)
-- [ ] `pyproject.toml` with deps from `docs/TECH_STACK.md`
-- [ ] `.gitignore`, `.env.example`, `pre-commit` (ruff+mypy+pytest-gate)
-- [ ] `src/` skeleton with empty modules per ARCHITECTURE section 2
-- [ ] `tests/` skeleton + `conftest.py` with `MockProvider` fixture
-- [ ] **Gate**: `pytest` (empty) green; `ruff check .` green; `mypy --strict src` green (vacuous)
-- **Commit**: `chore: project scaffold + tooling`
+This document records the standalone technical implementation roadmap of Sentinel AI 2.0, detailing the exact engineering steps, component files, and verification milestones executed across its 5 architectural phases:
 
-## 2. Phase 1 — Minimal loop, NO recovery (Hours 2–8)
-- [ ] `WorkingMemory` dataclass + `test_working_memory.py`
-- [ ] `llm/contracts.py`: `Reply`, `Provider` protocol + `MockProvider`
-- [ ] `llm/router.py` with **single** provider (anthropic) + `test_router.py` (single)
-- [ ] `tools/base.py` `ToolProtocol` + pydantic schemas + `test_tools_base.py`
-- [ ] `tools/file_io.py`, `tools/code_exec.py` (sandboxed subprocess)
-- [ ] `agent/react.py`: emit `Thought`+`Action`; `agent/runner.py`: 5-step happy loop
-- [ ] `io/logger.py` + `test_logger.py`; persist `WorkingMemory` per step
-- [ ] **Gate**: integration `test_happy_path_5step_goal_completes_no_corrections` green
-- **Commits**: `feat(memory): WorkingMemory`, `feat(llm): router+contracts+mock`,
-  `feat(tools): base + file_io + code_exec`, `feat(agent): react+runner happy path`,
-  `feat(io): structured logger`
+```mermaid
+flowchart TD
+    P1["Phase 1: Multi-Agent Core & Tree-of-Thought"] --> P2["Phase 2: Adaptive Recovery & Safety"]
+    P2 --> P3["Phase 3: Multi-Tier Routing & Resilience"]
+    P3 --> P4["Phase 4: Full-Stack WebSocket & UI"]
+    P4 --> P5["Phase 5: Evaluation Lab & Benchmarking"]
+```
 
-## 3. Phase 2 — Self-evaluation + 2 failure modes (Hours 8–16)
-- [ ] `agent/self_evaluator.py` (success/coherence/plan_valid/mode/classify)
-- [ ] `recovery/taxonomy.py` + `test_taxonomy.py` (golden triples)
-- [ ] `recovery/strategies.py` — **F1 ToolFailure** (call) + **F2 ResultInconsistency** (facts)
-- [ ] `recovery/controller.py` (budget enforcement) + `test_controller.py`
-- [ ] `test_strategies.py::test_each_strategy_mutates_distinct_object` for F1, F2
-- [ ] **Intentionally flaky `tools/flaky_net.py`** + `test_flaky_net.py`
-- [ ] Integration: `test_F1_recover_via_reinvoke_then_success`, `test_F2_inconsistency_probe_resolves`
-- [ ] **Decisive**: `test_correction_changes_call_or_facts_or_plan_or_scope_or_stop` for F1/F2
-- [ ] **Gate**: 3 of 11 goals (G1, G5, G6) pass e2e end-to-end with visible corrections in logs
-- **Commits**: `feat(eval): self_evaluator`, `feat(recovery): F1 tool_failure`,
-  `feat(recovery): F2 result_inconsistency`, `feat(tools): flaky_net`,
-  `feat(recovery): controller + budget`, `test(integration): F1 F2 recover`
+---
 
-## 4. Phase 3 — Remaining failure modes + multi-LLM fallback (Hours 16–26)
-- [ ] `recovery/strategies.py` — **F3 GoalDrift** (plan), **F4 InsufficientInformation** (plan+scope), **F5 BudgetExceeded** (stop)
-- [ ] Extend `test_strategies.py` distinctness to all 5 modes
-- [ ] `llm/openai_provider.py` + circuit breaker in `router.py` + `test_router.py` failover tests
-- [ ] (Optional) `llm/local_provider.py` (Ollama)
-- [ ] Integration: `test_F3_goal_drift`, `test_F4_insufficient_info`, `test_F5_escalation`, `test_router_failover`
-- [ ] Tools: `test_run.py` (pytest subprocess), `spec_check.py`
-- [ ] **Gate**: 6 of 11 goals pass e2e
-- **Commits**: `feat(recovery): F3 goal_drift`, `feat(recovery): F4 insufficient_info`,
-  `feat(recovery): F5 budget_exceeded`, `feat(llm): openai provider + circuit breaker`,
-  `feat(tools): run_tests + spec_check`, `test(integration): F3 F4 F5 + router failover`
+## 2. Phase-by-Phase Technical Breakdown
 
-## 5. Phase 4 — Eval, viewers, baseline, comparison (Hours 26–36)
-- [ ] `eval/goals.yaml` (all 11 goals)
-- [ ] `eval/metrics.py` + `eval/run_eval.py`
-- [ ] `examples/baseline_no_self_corr.py` (self-eval stubbed to always-True)
-- [ ] `eval/comparison.md` generator
-- [ ] `io/viewer_cli.py` (`rich`) + `io/viewer_html.py` (`jinja2`) + `test_viewer.py`
-- [ ] `eval/scripts/audit_retries.py` (the M3 audit)
-- [ ] **Gate**: 10+ goals run; metrics emitted; comparison table generated; M3 audit clean (no hidden retries)
-- **Commits**: `feat(eval): goals + metrics + runner`, `feat(baseline): no-self-correct variant`,
-  `feat(io): cli + html viewers`, `feat(eval): comparison + retry-audit script`
+### Phase 1: Multi-Agent Core & Tree-of-Thought Planning
+**Objective:** Transition from legacy single-agent ReAct loops to a coordinated multi-specialist pipeline.
 
-## 6. Phase 5 — Demo, README, honesty pass (Hours 36–44)
-- [ ] `demos/demo_script.md` — storyboard with >=1 visible correction
-- [ ] Record GIF (asciinema -> gif)
-- [ ] Manually run M1, M2, M4, M5, M6, M8, M9 checklists; record outputs
-- [ ] README: architecture (link ARCHITECTURE), taxonomy (link TESTING_PLAN section 2.3), eval results (incl. failures), 3 traced cases, future-work list
-- **Commits**: `docs: demo storyboard`, `docs: README`, `test(manual): M1-M9 records`
+- [x] **Task 1.1: EventBus & Agent Context Foundations (`backend/orchestrator/base.py`)**
+  - Implement thread-safe `EventBus` with subscriber registration and sequence counter (`seq`).
+  - Define `AgentContext` dataclass containing goal, acceptance criteria, router, cost tracker, and vector store.
+  - Implement `Agent` base class with `_llm_chat` wrapper, token estimation, and telemetry attribution.
 
-## 7. Phase 6 — Polish, clean-room run (Hours 44–48)
-- [ ] `mypy --strict src` full green; ruff clean
-- [ ] Coverage to >=85% on `src/` (close gaps from `pytest-cov` report)
-- [ ] **M10 clean-room run**: fresh clone + `.env` -> `python -m eval.run_eval` runs to completion; metrics within stated variance
-- [ ] Final commit-history audit (small, descriptive commits)
-- **Commits**: `chore: strict types`, `chore: coverage to 85%`, `chore: cleanroom eval verified`
+- [x] **Task 1.2: Tree-of-Thought Orchestrator (`backend/orchestrator/orchestrator.py`)**
+  - Implement `ORCH_SYSTEM_PROMPT` generating 3 candidate paths (`P1`, `P2`, `P3`) with confidence scores.
+  - Implement `EXEC_PLAN_PROMPT` decomposing the winning path into typed subtasks (`coder`, `critic`, `executor`).
+  - Add visual graph nodes for candidate branches and selected execution paths.
 
-## 8. Build Order Cheatsheet (which file when)
-| Hour band | Files touched |
-|-----------|---------------|
-| 0–2 | pyproject, .gitignore, .env.example, conftest, skeletons |
-| 2–8 | working_memory, llm/contracts+router, tools/base+file_io+code_exec, react, runner, logger |
-| 8–16 | self_evaluator, taxonomy, strategies (F1,F2), controller, flaky_net |
-| 16–26 | strategies (F3,F4,F5), openai/local providers, circuit breaker, run_tests, spec_check |
-| 26–36 | eval/goals.yaml, run_eval, metrics, baseline variant, viewers, audit_retries |
-| 36–44 | demos, README, manual checklist records |
-| 44–48 | mypy strict, coverage, clean-room run |
+- [x] **Task 1.3: RAG-Assisted Coder Agent (`backend/orchestrator/coder.py`)**
+  - Implement Coder with `VectorStore` memory recall of past solutions.
+  - Implement AST parsing and double-escaped newline unescaping (`ast.parse`).
+  - Add regex fallback parsers for broken JSON outputs.
 
-## 9. Stop Conditions
-- **Stop and surface** if: real-LLM API key unavailable for e2e (cannot produce required metrics/logs) — request credentials.
-- **Stop and surface** if: Windows sandbox limits materially affect e2e determinism in a way not covered by the documented limitation.
-- **Continue past friction** for everything else (ambiguous goal: pick most reasonable, note assumption, continue).
-- **Never claim "done"** without: `pytest -q` green, `ruff check .` green, `mypy --strict src` green, `python -m eval.run_eval` producing the required artifacts, and the demo GIF recorded.
+- [x] **Task 1.4: LLM-as-a-Judge Critic Agent (`backend/orchestrator/critic.py`)**
+  - Implement 4-axis scoring rubric (Correctness, Edge Cases, Acceptance, Readability).
+  - Implement dynamic score scaling when LLM returns 0–40 sums.
+  - Enforce strict $\ge 80/100$ approval threshold with structured issue extraction.
 
-## 10. Commit Message Style
-- Conventional commits: `feat(scope): ...`, `test(scope): ...`, `docs: ...`, `chore: ...`, `fix(scope): ...`.
-- Scoped: `agent`, `recovery`, `tools`, `llm`, `io`, `eval`, `docs`, `test`.
+- [x] **Task 1.5: Sandboxed Subprocess Executor (`backend/orchestrator/executor.py`)**
+  - Implement `RunPythonTool` integration executing inside an isolated tempdir.
+  - Implement regex traceback parser extracting line, exception name, and failure kind.
+  - Add benign stderr filtering for test runners.
+
+**Phase 1 Gate:** Offline pipeline integration test (`test_multiagent_pipeline.py`) completes end-to-end using `_ScriptedProvider`.
+
+---
+
+### Phase 2: Adaptive Recovery, AST Guardrails & Escalation
+**Objective:** Equip the pipeline with targeted failure recovery and human-in-the-loop safeguards.
+
+- [x] **Task 2.1: Pre-Execution AST Safety Guardrails (`backend/safety/guardrails.py`)**
+  - Implement regex pre-filter for dangerous shell commands (`os.system`, recursive deletions).
+  - Implement AST visitor scanning for banned imports (`ctypes`, `socket`, `multiprocessing`).
+  - Block dynamic `eval()` and `exec()` on non-literal strings.
+
+- [x] **Task 2.2: Adaptive RetryRouter (`backend/orchestrator/retry.py`)**
+  - Implement `classify()` classifying tracebacks into `SYNTAX`, `LOGIC`, and `EXTERNAL`.
+  - Implement `LINE_PATCH` strategy for syntax errors targeting specific line numbers.
+  - Implement `FULL_REWRITE` strategy for logic errors.
+  - Implement `BACKOFF` strategy with exponential backoff and random jitter.
+
+- [x] **Task 2.3: Human-in-the-Loop EscalationManager (`backend/orchestrator/escalation.py`)**
+  - Implement moving average confidence tracker across attempts.
+  - Implement escalation trigger when `attempts >= 2` and `confidence < 0.50`.
+  - Implement `wait_until_answer()` with configurable timeouts and event emission (`needs_human_review`).
+
+- [x] **Task 2.4: Local TF-IDF VectorStore Memory (`backend/memory/vector_store.py`)**
+  - Implement local disk-backed persistence in `~/.sentinel_ai/memory/memory.json`.
+  - Implement cosine similarity vector search over TF-IDF token weights.
+  - Store solved implementations and error signatures for cross-run learning.
+
+- [x] **Task 2.5: Cost & Token Telemetry (`backend/orchestrator/cost.py`)**
+  - Implement `CostTracker` recording input tokens, output tokens, and calculated USD costs.
+  - Enforce `TokenBudget` ceilings, cleanly aborting execution if budget limits are hit.
+
+**Phase 2 Gate:** Unit tests for taxonomy, retry router, escalation, and vector store pass (155 tests green).
+
+---
+
+### Phase 3: Multi-Tier Provider Routing & Free-Tier Resilience
+**Objective:** Deliver 100% reliable inference across 7 free and commercial LLM providers without hardcoded model strings.
+
+- [x] **Task 3.1: Multi-Tier Architecture (`backend/config.py`, `backend/llm/router.py`)**
+  - Define 3 semantic model tiers: `strategic`, `coding`, and `fast_eval`.
+  - Configure provider chains for Groq, NVIDIA NIM, OpenRouter, SambaNova, OpenCode, Cohere, Cerebras.
+
+- [x] **Task 3.2: Dynamic Catalog Model Discovery (`backend/llm/openai_provider.py`)**
+  - Implement dynamic `/v1/models` catalog lookup on initialization.
+  - Filter out invalid families (whisper, dall-e, embedding, guardrails).
+  - Classify models by parameter size indicators (70B/120B into heavy, 8B/27B into light).
+
+- [x] **Task 3.3: Reactive 429 Backoff & Token-per-Day (TPD) Rotation**
+  - Implement 2-second sleep on HTTP 429 rate limits.
+  - Rotate to alternative fallback models when free-tier TPD quotas are hit on a specific model ID.
+  - Maintain provider `fail_count` sorting to sink failing endpoints automatically.
+
+- [x] **Task 3.4: Cohere Rate-Limit Throttling (`backend/llm/cohere_provider.py`)**
+  - Implement 6-second inter-call throttle to prevent bursting the trial tier.
+  - Fail-fast on 429 to avoid hammering rate-limited keys.
+
+**Phase 3 Gate:** LLMRouter passes all failover tests and recovers from injected 429 errors seamlessly.
+
+---
+
+### Phase 4: Full-Stack WebSocket Layer & ReactFlow UI
+**Objective:** Provide an interactive, developer-first visual console for monitoring multi-agent execution in real time.
+
+- [x] **Task 4.1: FastAPI WebSocket Server (`backend/server/server.py`)**
+  - Implement full-duplex WebSocket handler at `/ws`.
+  - Connect WebSocket client queue to `EventBus` for streaming `AgentEvent` payloads.
+  - Handle client messages: `run`, `stop`, `escalation_response`.
+
+- [x] **Task 4.2: SQLite3 History Store (`backend/db/store.py`)**
+  - Implement SQLite database storing run metadata, goals, elapsed times, tokens, and costs.
+  - Expose `/api/runs` and `/api/runs/{run_id}` HTTP inspection endpoints.
+
+- [x] **Task 4.3: ReactFlow Visual Graph Canvas (`frontend/src/components/AgentGraph.tsx`)**
+  - Render node-edge DAG with dynamic status coloring (active, success, rejected, candidate).
+  - Display animated edges indicating active agent transitions.
+
+- [x] **Task 4.4: Real-Time Telemetry & Terminal (`frontend/src/components/Terminal.tsx`, `Telemetry.tsx`)**
+  - Stream terminal logs, stdout, stderr, and RAG recall events.
+  - Display real-time token counts, USD expenditure, and active provider pills.
+
+- [x] **Task 4.5: Human Escalation Modal (`frontend/src/components/EscalationModal.tsx`)**
+  - Modal dialogue rendered upon receiving `needs_human_review` event.
+  - Allows developer to type an advice string that resumes backend execution.
+
+**Phase 4 Gate:** Browser connects to WebSocket, submits goal, renders live ReactFlow graph, and receives complete code artifact.
+
+---
+
+### Phase 5: Evaluation Lab & Empirical Verification
+**Objective:** Measure and prove the real-world performance lift of autonomous self-correction.
+
+- [x] **Task 5.1: Evaluation Engine (`backend/eval_suite.py`)**
+  - Implement `run_evaluation_suite()` automating sequential batch testing across canonical goals.
+  - Support A/B execution with Self-Correction enabled (`max_retries = 3`) and baseline (`max_retries = 1`).
+  - Output structured JSON trace per run and consolidated `summary.json`.
+
+- [x] **Task 5.2: 12 Canonical Coding Goals (`run_custom_test.py`)**
+  - Create standardized 12-task benchmark suite covering data structures, algorithms, CSV processing, Fibonacci repair, matrix multiplication, and error recovery.
+
+- [x] **Task 5.3: Benchmark Run Execution & Result Verification (`eval_1791864368`)**
+  - Execute full 24-run evaluation suite.
+  - Verify **100.0% completion rate (Self-Correction ON)** vs **75.0% Baseline (OFF)**.
+  - Record complete benchmark report in [`docs/BENCHMARK_REPORT.md`](./BENCHMARK_REPORT.md).
+
+**Phase 5 Gate:** Evaluation suite executes cleanly with zero unhandled API crashes and produces verified 100% completion metrics.

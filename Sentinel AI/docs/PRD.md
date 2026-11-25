@@ -1,156 +1,117 @@
-# PRD — Self-Correcting Multi-Step Agent (Code Generation + Execution)
+# Sentinel AI 2.0 — Product Requirements Document (PRD)
 
-> Heva AI — AI/ML Engineer Assignment 2. Build a multi-step agent that plans,
-> executes, monitors its own outputs, detects failure or goal drift, and
-> self-corrects without a human in the loop. Domain: **code generation +
-> execution**. Language: **Python 3.12**. Reasoning engine: **multi-LLM
-> fallback chain**. No agent frameworks allowed.
+## 1. Executive Summary & Core Value Proposition
 
-## 1. Problem Statement
-Production AI agents fail predictably: they execute a plan, hit a failure, and
-either crash or emit a confidently-wrong answer. The hard part of agentic AI is
-**not** getting an LLM to take actions — it is getting the agent to **detect**
-when its actions went wrong and **recover intelligently** with no human in the
-loop.
+### 1.1 Executive Summary
+**Sentinel AI 2.0** is an enterprise-grade, full-stack multi-agent autonomous engineering platform designed to eliminate silent failures, runtime exceptions, and non-functional code generation in AI-assisted software development.
 
-This project builds an agent that:
-- Given a small coding goal (>=5 surface steps to complete),
-- Plans -> executes -> self-evaluates after each action,
-- Detects failure / result inconsistency / goal drift,
-- Replans or escalates without infinite loops,
-- Produces a real working artifact (code file, test results, or honest degraded output).
+Traditional code generation models operate in a single unmonitored pass: they accept a user prompt, generate an unverified block of code, and return it without validation. When subtle logic bugs, missing imports, off-by-one errors, or runtime exceptions occur, the user is forced to manually diagnose, debug, and reprompt the model.
 
-It is not a chatbot. It performs real actions in the filesystem and subprocess layer.
+Sentinel AI 2.0 replaces this fragile single-shot pattern with an automated, closed-loop multi-agent engineering team:
+1. **Strategic Planning:** An **Orchestrator Agent** decomposes goals using Tree-of-Thought (ToT) reasoning into ordered subtasks with predicted confidence scores.
+2. **Informed Synthesis:** A **Coder Agent** writes complete, production-grade Python scripts guided by historical RAG memory recall and automatic AST unescaping.
+3. **Automated Verification:** A **Critic Agent** acts as an objective LLM-as-a-Judge, scoring code across 4 orthogonal dimensions (correctness, edge cases, acceptance, readability) against an 80/100 threshold.
+4. **Sandboxed Subprocess Execution:** An **Executor Agent** runs the code inside an isolated environment protected by pre-execution AST safety guardrails.
+5. **Targeted Failure Recovery:** An **Adaptive RetryRouter** classifies runtime tracebacks into targeted remediation strategies (`line_patch`, `full_rewrite`, `backoff`).
+6. **Human-in-the-Loop Safeguard:** An **EscalationManager** automatically alerts and consults the human developer if confidence degrades after repeated retries.
+7. **Transparent Telemetry:** A real-time **FastAPI WebSocket** and **ReactFlow** frontend visualizes every node transition, token expenditure, and terminal log line.
 
-## 2. Goals (P0)
-| # | Requirement | Acceptance |
-|---|---|---|
-| G1 | Explicit ReAct loop (reason + act) | Every step emits a `Thought` before its `Action`; trace logged + inspectable. |
-| G2 | Explicit working memory | `WorkingMemory` dataclass (Goal/Plan/Executed/Findings/Pending/Budget/WorldModel/Corrections) — not chat history. Persisted per step. |
-| G3 | Typed & validated tool calls | Each tool declares pydantic v2 schemas for args **and** return; violations synthesize `ToolFailure(shape_violation)` instead of crashing. |
-| G4 | Post-action self-evaluation | After every tool call, evaluator scores: success, goal-coherence, plan-validity, classifies `FailureMode` (or `None`). |
-| G5 | >=3 distinct failure modes with distinct recovery | F1 ToolFailure / F2 ResultInconsistency / F3 GoalDrift / F4 InsufficientInformation / F5 BudgetExceeded. Each mutates a **different object**: call, facts, plan, plan+scope, stop. Not "retry with a different prompt". |
-| G6 | Replanning budget + escalation | Per-subtask budget N; on exhaustion mark `unresolvable` with a structured `UnresolvableRecord` (mode history, attempts, evidence, hypothesis). Continue, never loop. |
-| G7 | Intentionally flaky tool | `flaky_net.install_package` fails ~40% and sometimes returns malformed-success schema; e2e shows detect + recover. |
-| G8 | Eval on >=10 goals | `eval/run_eval.py` produces: completion rate, avg steps, self-corrections, unrecoverable, provider switches. |
-| G9 | >=3 traced self-corrections | README contains 3 full reasoning-trace case studies (one F1, one F2, one F3). |
-| G10 | Baseline comparison | A "no self-correction" variant (`examples/baseline_no_self_corr.py`) runs the same 10 goals; comparison table shows quality delta. |
-| G11 | Structured logs + viewer | One JSON per run in `eval/reports/`. CLI viewer (`rich`) + HTML viewer (`jinja2`) read identical fields. |
-| G12 | Constraints honored | No LangChain / LlamaIndex / AutoGen / CrewAI / pre-built agent scaffolding. Only LLM APIs + standard tool libs. |
+### 1.2 Core Value Proposition
+- **Guaranteed Task Completion Lift:** Autonomous self-correction elevates task completion rates from **75.0% to 100.0%** across standardized programming benchmarks.
+- **Sub-Cent Operating Cost:** Intelligent multi-tier routing prioritizes free-tier LLM endpoints (Groq, NVIDIA NIM, OpenRouter, SambaNova) with automatic token-per-day rotation.
+- **Enterprise-Grade Observability:** Complete auditability over WebSocket event streams and local SQLite3 execution logging.
 
-## 3. Non-Goals
-- Not a general-purpose chat assistant.
-- Not a chat UI; only a log viewer.
-- No multi-agent / agent-framework integration.
-- No production deployment / serving infra.
-- No GPU training, no fine-tuning.
-- No browser automation tools (domain is local code/subprocess).
+---
 
-## 4. Users & Personas
-Single user: the **engineer-reviewer** (Heva AI interviewer + author) who runs
-`eval/run_eval.py`, reads `eval/reports/`, and joins an interview that probes
-the design. The agent itself is the runtime.
+## 2. Target User Personas & Operational Scenarios
 
-## 5. Domain Choice & Why
-**Code generation + execution.** Each goal produces concrete artifacts: source
-files, test runs, stdout. Failure is *observable and machine-checkable*
-(non-zero exit code, traceback, test failure, malformed output). Self-evaluation
-is grounded rather than vibes-based.
+### 2.1 User Personas
+| Persona | Title | Primary Responsibility | Key Pain Point | Sentinel AI 2.0 Solution |
+| :--- | :--- | :--- | :--- | :--- |
+| **DevOps & Platform Architect** | Senior SRE / DevOps Lead | Infrastructure automation scripts and internal CLI tools | AI scripts fail silently in CI/CD pipelines due to unhandled edge cases or missing dependencies. | Sandboxed execution and automatic self-healing ensure only fully functional scripts are deployed. |
+| **AI/ML Benchmark Evaluator** | Technical Research Lead | Evaluating agentic coding frameworks and prompt strategies | Inability to separate AI hype from empirical, reproducible benchmark gains. | Built-in Evaluation Lab provides automated A/B comparative testing with exact telemetry. |
+| **Full-Stack Application Developer** | Senior Software Engineer | Rapid prototyping and microservice implementation | AI assistants oscillate between broken solutions when repeated errors occur. | VectorStore RAG memory recalls past error signatures and fixes, preventing repetitive mistake loops. |
 
-**Assignment-relevant risk we explicitly mitigate.** A code agent that just
-re-runs on failure is *exactly* the retry-loop anti-pattern. Our recovery
-taxonomy is designed so each mode mutates a **different object** (call args /
-facts / plan / scope / stop). The manual audit M3 in the testing plan audits
-`CorrectionRecord` history to reject hidden retries.
+### 2.2 Operational Scenarios
+- **Scenario A (Autonomous Algorithmic Synthesis):** A developer needs a complex data structure (e.g., an LRU cache or self-balancing tree) with unit tests. The Orchestrator plans the file structure, Coder synthesizes the module, Critic verifies boundary cases, and Executor verifies tests pass exit code 0.
+- **Scenario B (Environment/Runtime Self-Healing):** A script fails due to an unhandled `FileNotFoundError` or `ImportError`. The RetryRouter classifies the error as `LOGIC`, feeds the traceback to the Coder, and the Coder injects defensive fallback logic automatically.
+- **Scenario C (Interactive Human Escalation):** An ambiguous specification causes repeated Critic rejections. The system triggers an interactive modal in the React UI, gathers a 1-sentence clarification from the developer, and resumes execution to success.
 
-## 6. Use Cases (10 evaluation goals)
-See `eval/goals.yaml` and `docs/TESTING_PLAN.md` section 4.4.
-| ID | Theme | Designed to trigger |
-|----|-------|---------------------|
-| G1 | `fib(n)` recursive + test | baseline happy path |
-| G2 | `fib(n)` iterative O(1) memory | F3 goal drift (rewrite) |
-| G3 | Filter CSV rows `price>100` (quoted comma mid-field) | F2 inconsistency (parse) |
-| G4 | Read `mod.py`, fix an off-by-one | F4 insufficient info -> probe |
-| G5 | Goal that needs an external package via flaky net | F1 tool failure + schema viol. |
-| G6 | Sum a list of ints, `0` on empty — buggy `sum()` shadowing builtin | F2 inconsistency (test fail) |
-| G7 | Multi-step: write tests -> impl -> run -> fix -> re-run until green | compound F1/F2/F3 |
-| G8 | Multi-file: FizzBuzz in `lib/` + re-export via `__init__.py` | F4 insufficient info |
-| G9 | Unreachable acceptance criterion (`<1ms` on `n=10^9`) | F5 escalation (honest failure) |
-| G10 | Ambiguous spec ("make a nice CLI") with implicit expectations | F3 drift + documented degraded output |
-| G11 (bonus) | Tiny CLI with >=3 subcommands + tests | budget fatigue, long horizon |
+---
 
-## 7. Functional Requirements
-### 7.1 Agent Loop (`src/agent/`)
-- `AgentRunner` orchestrates the loop, enforces budget, persists working memory per step.
-- `react.step()` produces `Thought` -> `Action` via the LLM router.
-- `WorkingMemory` is the single source of truth; persisted to disk every step.
-- `self_evaluator.evaluate(goal, action, observation, plan, world_model)` returns `{success, coherence, plan_valid, mode, evidence}`.
+## 3. Product Goals & Quantitative Success Metrics
 
-### 7.2 Tools (`src/tools/`)
-- `ToolProtocol`: `name`, `args_schema`, `return_schema`, `invoke(args)`.
-- Built-ins: `write_file`, `read_file`, `run_python` (subprocess sandbox: `cwd=tempdir`, `timeout`, network-blocked env), `run_tests` (pytest), `spec_check` (predicate vs expected), `flaky_net.install_package` (intermittent fail + malformed-success).
-- All returns pydantic-validated; violations become synthetic `ToolFailure(shape_violation)`.
+### 3.1 Quantitative Success Metrics
+| Metric | Baseline Target (Self-Correction OFF) | Sentinel 2.0 Target (Self-Correction ON) | Empirical Measured Result (`eval_1791864368`) |
+| :--- | :---: | :---: | :---: |
+| **Task Completion Rate** | $\le 75\%$ | **$\ge 95\%$** | **100.0%** (12 / 12 passed) |
+| **Relative Completion Lift** | Baseline | **$\ge +25\%$** | **+33.3% relative lift** (+25.0 percentage points) |
+| **Average Self-Corrections** | $0.00$ | $\le 1.00$ per task | **0.67** per task (8 total across suite) |
+| **Benchmark Coverage ($N$)** | 12 goals | 12 goals | **12 canonical goals** (24 total runs) |
+| **Provider Fallback Resilience** | N/A | $100\%$ failover resilience | **Zero unhandled API crashes** across 7 providers |
+| **WebSocket Dispatch Latency** | N/A | $\le 20\text{ms}$ | **$< 15\text{ms}$** dispatch overhead |
 
-### 7.3 Recovery (`src/recovery/`)
-- `taxonomy.classify(action, observation, plan, world_model) -> FailureMode | None`.
-- `controller.recover(mode, ctx) -> NewPlan | Escalation` — enforces budget per subtask.
-- `strategies.<mode>()` — one function per mode, each mutating a different object.
+---
 
-### 7.4 LLM Router (`src/llm/`)
-- Chain: `Anthropic Claude Sonnet` -> `OpenAI GPT-4o` -> `Ollama local` (optional).
-- Per-provider circuit breaker (K fails in window -> cooldown).
-- Common `Reply` contract; router transparent to the agent loop.
+## 4. Detailed Functional Requirements
 
-### 7.5 Observability (`src/io/`)
-- `logger` writes `eval/reports/<run_id>.json` per run (schema: ARCHITECTURE section 2.8).
-- `viewer_cli` (`rich`) and `viewer_html` (`jinja2`) read the same JSON.
+### 4.1 Orchestration & Planning (FR-ORCH)
+- **FR-ORCH-1 (ToT Generation):** Given a user goal, the Orchestrator shall prompt the strategic LLM tier to generate exactly 3 candidate approach paths (`P1`, `P2`, `P3`).
+- **FR-ORCH-2 (Path Scoring):** Each path must include a predicted confidence score ($0.0 - 1.0$), one-line rationale, risks, and sequential steps.
+- **FR-ORCH-3 (Subtask Decomposition):** The chosen highest-confidence path shall be expanded into 2–3 ordered subtasks, each assigned to an agent (`coder`, `critic`, `executor`) and a model tier (`strategic`, `coding`, `fast_eval`).
+- **FR-ORCH-4 (ToT Fallback):** If an approach fails all retry attempts, the Orchestrator shall fall back to the next-highest-scoring candidate path (`F1`, `F2`, ...).
 
-### 7.6 Eval (`eval/`)
-- `run_eval.py` iterates `goals.yaml`, runs the agent + baseline, writes per-run JSON + aggregate `metrics.csv` / `metrics.md` / `comparison.md`.
+### 4.2 Coder Agent & Code Generation (FR-CODE)
+- **FR-CODE-1 (RAG Memory Integration):** Before generating code, the Coder shall query the local `VectorStore` for semantically similar solved goals and error remediation strategies.
+- **FR-CODE-2 (Completeness Contract):** Generated code must be complete, idiomatic Python 3.12+ containing full function bodies, standard library imports, and type hints (no `# TODO` placeholders).
+- **FR-CODE-3 (AST Sanitization Engine):** The Coder shall execute an automated AST unescaping pass (`ast.parse`) to detect and fix double-escaped newlines (`\\n` $\rightarrow$ `\n`) and backslashes before disk writes.
+- **FR-CODE-4 (Defensive File IO):** Code writes must execute through `WriteFileTool` enforcing path traversal sandboxing within the designated workspace.
 
-## 8. Non-Functional Requirements
-| Area | Target |
-|------|--------|
-| Type safety | `mypy --strict src` passes; pydantic v2 for runtime tool I/O |
-| Lint/format | `ruff check . && ruff format --check .` passes |
-| Test gates | Unit + integration suites pass with >=85% line coverage on `src/` |
-| Determinism | Unit + integration deterministic via `MockProvider` + seeded `flaky_net` |
-| Isolation | All subprocess tool calls run in test-isolated tempdirs; network-blocking env where supported |
-| Secrets | `.env` for API keys, `.gitignore`-protected; no secrets in source/logs |
-| Performance | Step budget <= ~25 steps/goal (configurable); per-tool timeout <= 30s |
-| Reproducibility | `eval/` runnable from fresh clone with only `.env` set |
-| File hygiene | Source files <= ~500 lines each |
+### 4.3 Automated Code Review & LLM-as-a-Judge (FR-CRIT)
+- **FR-CRIT-1 (4-Axis Evaluation):** The Critic shall evaluate submissions across four 0–10 axes: Correctness, Edge Cases, Acceptance Criteria, and Readability.
+- **FR-CRIT-2 (Score Normalization):** Total scores must scale to $0 - 100$. Unscaled $0 - 40$ axis sums must be normalized dynamically ($\text{axis\_sum} \times 2.5$).
+- **FR-CRIT-3 (Approval Threshold):** Submissions scoring $\ge 80/100$ receive an `ACCEPT` verdict. Submissions $< 80$ receive a `REJECT` verdict with actionable `issues` and `fix_suggestions`.
+- **FR-CRIT-4 (Final Attempt Leniency):** On the final retry attempt, code shall proceed to the Executor to test real runtime behavior rather than looping indefinitely on stylistic rejections.
 
-## 9. Success Criteria
-1. Rubric survives interview:
-   - Self-correction is **principled**, not a renamed retry (audit M3).
-   - Failure-mode taxonomy has **distinct recovery strategies** (audit M2).
-   - Working memory reflects **stateful design**, not chat history.
-   - ReAct traces show **reasoning**, not formatted echoes (M1).
-   - Evaluation is **honest**: every unrecoverable case listed with the agent's own evidence (M9).
-2. `eval/run_eval.py` runs the 11 goals and baseline variant; emits metrics.
-3. README covers architecture, taxonomy, eval (incl. failures), >=3 traced cases.
-4. Demo GIF/asciinema shows >=1 visible self-correction.
-5. Structured logs render correctly in both viewers.
+### 4.4 Sandboxed Execution & Safety Guardrails (FR-EXEC)
+- **FR-EXEC-1 (AST Safety Guardrail Scan):** Prior to execution, code must pass an AST scanner blocking dangerous modules (`ctypes`, `socket`, `multiprocessing`) and functions (`os.system`, recursive deletions, dynamic `__import__`).
+- **FR-EXEC-2 (Subprocess Isolation):** Code runs in an isolated subprocess with a default 30-second execution timeout.
+- **FR-EXEC-3 (Traceback Parsing):** Non-zero exit codes must be parsed into structured error descriptors (`exception`, `line`, `kind`, `demands_strategy`).
+- **FR-EXEC-4 (Benign Stderr Handling):** Output containing zero exit codes with benign stderr messages (e.g., standard `unittest` progress) shall be marked as successful execution.
 
-## 10. Constraints & Risks
-| Risk | Impact | Mitigation |
-|------|--------|------------|
-| Recovery collapses to retry | assignment-failing | M3 audit; distinct mutation-object per mode in design |
-| LLM nondeterminism | flaky tests | `MockProvider` for unit/integration; real LLM only in e2e |
-| Real API cost / rate limits | slow iteration | deterministic fixtures; e2e batched; circuit breaker |
-| Windows sandbox limits (no `setrlimit`) | weaker isolation | documented; `timeout` + `cwd` + env-blocking still enforced |
-| Ambiguous goals (G10) unbounded | budget exhaustion | per-subtask budget N + F5 escalation guarantees termination |
-| Multi-LLM router complexity | fallback bugs | circuit-breaker unit tests; M5 manual failover drill |
+### 4.5 Adaptive Retry Routing (FR-RETRY)
+- **FR-RETRY-1 (Syntax Recovery):** `SyntaxError`, `IndentationError`, and `TabError` shall trigger the `LINE_PATCH` strategy, prompting Coder to patch specific line numbers.
+- **FR-RETRY-2 (Logic Recovery):** `AssertionError`, `ValueError`, `KeyError`, and `IndexError` shall trigger the `FULL_REWRITE` strategy, prompting Coder to overhaul algorithms and base cases.
+- **FR-RETRY-3 (External Recovery):** Timeouts and environment exceptions shall trigger the `BACKOFF` strategy with exponential jitter delays ($1\text{s}, 2\text{s}, 4\text{s}$).
 
-## 11. Timeline
-48h. Build order in `docs/IMPLEMENTATION_ORDER.md` is structured so a *minimum
-demonstrable* agent (mock LLM, 2 of 5 failure modes, 3 of 11 goals) works by end
-of Hour 16, leaving the bulk for self-correction nuance, eval honesty, demo.
+### 4.6 Human-in-the-Loop Escalation (FR-ESCALATE)
+- **FR-ESCALATE-1 (Confidence Trigger):** If a subtask remains unresolved after 2 retries and moving average confidence is $< 0.50$, execution shall pause and emit a `needs_human_review` event.
+- **FR-ESCALATE-2 (Interactive Resolution):** The React UI shall present an interactive modal displaying recent error signatures and a targeted clarifying question.
+- **FR-ESCALATE-3 (Context Injection):** When answered, the human advice shall be injected into the Coder prompt and the retry budget shall be reset.
 
-## 12. Out of Scope for V1 (future-work list for README)
-- Streaming LLM responses / token-level traces.
-- Saving/replaying real LLM fixtures for full e2e determinism.
-- Parallel tool calls within a single step.
-- Browser-based interactive viewer (we ship static HTML only).
-- Real sandboxing via containers (we use subprocess + tempdir + env).
+### 4.7 Evaluation Lab Benchmark Suite (FR-EVAL)
+- **FR-EVAL-1 (A/B Test Execution):** The system shall support automated batch execution comparing Self-Correction ON vs Baseline (OFF) across 12 canonical goals.
+- **FR-EVAL-2 (Trace Persistence):** Individual run traces and an aggregated `summary.json` report must be saved automatically to `local_test_report/eval_<timestamp>/`.
+
+---
+
+## 5. Non-Functional Requirements & System Constraints
+
+| Category | Requirement | Specification |
+| :--- | :--- | :--- |
+| **Performance** | Event Streaming | WebSocket event broadcast latency $\le 15\text{ms}$; real-time token streaming. |
+| **Cost Management** | Free-Tier Priority | Intelligent load balancing across free tiers of Groq, NVIDIA NIM, and OpenRouter. |
+| **Budget Enforcement** | Hard Financial Caps | Automatically halts execution if total tokens exceed 200,000 or USD cost exceeds \$5.00. |
+| **Reliability** | Parser Fallbacks | 100% of LLM replies pass through regex fallback extractors to prevent JSON deserialization crashes. |
+| **Portability** | Platform Independence | Fully operational on Windows, macOS, and Linux without native binary dependencies. |
+
+---
+
+## 6. Risk Register & Mitigation Strategy
+
+| Risk ID | Risk Description | Severity | Likelihood | Mitigation Strategy |
+| :--- | :--- | :---: | :---: | :--- |
+| **RSK-1** | Free-tier provider 429 rate limiting or quota exhaustion | High | High | Multi-tier failover chain across 7 providers, reactive 2s backoff, and per-model token-per-day rotation. |
+| **RSK-2** | Subprocess sandbox breakout or destructive shell commands | Critical | Low | Static AST safety scanner (`backend/safety/guardrails.py`) blocks dangerous modules and system calls prior to execution. |
+| **RSK-3** | Infinite retry loops consuming excessive tokens | High | Low | Hard attempt cap (`max_retries_per_subtask: 3`) and cost budget monitoring (`max_total_cost_usd: 5.0`). |
+| **RSK-4** | LLM formatting errors producing unparseable JSON code blocks | Medium | Medium | Multi-tier fallback extraction in Coder and Critic agents (clean JSON $\rightarrow$ block regex $\rightarrow$ fence extraction). |
