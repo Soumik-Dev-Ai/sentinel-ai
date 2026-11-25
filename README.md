@@ -26,7 +26,7 @@
 Modern LLMs struggle with multi-step algorithmic problem solving, complex compilation constraints, edge-case validation, and runtime error recovery. **Sentinel AI 2.0** replaces monolithic single-prompt generation with a **decoupled, self-correcting multi-agent architecture** that mirrors real-world software engineering teams:
 
 1. **Strategic Planning:** An Orchestrator evaluates 3 distinct candidate paths with confidence metrics before decomposing a goal.
-2. **Context-Aware Synthesis:** Coder queries a TF-IDF RAG vector memory for historical solutions and generates full-file implementations across 6 polyglot languages.
+2. **Context-Aware Synthesis:** Coder queries a persistent Turso (`libSQL`) + FAISS RAG vector store for historical solutions and generates full-file implementations across 6 polyglot languages.
 3. **Pre-Execution Guardrails:** A structural AST scanner rejects unsafe system patterns before code touches disk or hardware.
 4. **LLM-as-a-Judge Review:** A specialized Critic audits the code against correctness, edge cases, acceptance criteria, and cleanliness (rejecting below score 80).
 5. **Sandboxed Polyglot Execution:** Isolated execution engine enforces virtual memory caps, CPU time limits, and compilation toolchains for Python, Go, Rust, C, C++, and Node.js.
@@ -149,8 +149,8 @@ All Python scripts are subjected to a rigorous AST inspection before execution. 
 <summary><b>5. Long-Term RAG Vector Memory</b></summary>
 <br>
 
-Sentinel AI maintains a persistent, disk-backed TF-IDF semantic vector store.
-- **Success Recall:** Every solved problem and passing test suite is indexed. When new goals are received, the Coder agent retrieves the top-$k$ most similar implementations to seed its context.
+Sentinel AI persists historical patterns and run telemetry in **Turso (`libSQL`)** using native `F32_BLOB(256)` vector embeddings and `vector_distance_cos` similarity over Hrana HTTP v2 (with automatic local FAISS / SQLite fallback when offline).
+- **Success Recall:** Every solved problem and passing test suite is indexed in the `memories` table. When new goals are received, the Coder agent retrieves the top-$k$ most similar implementations to seed its context.
 - **Failure Adaptation:** Common error patterns and their successful resolution strategies are stored to prevent repeating past mistakes.
 </details>
 
