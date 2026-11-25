@@ -279,7 +279,7 @@ class MultiAgentPipeline:
         )
 
         generated_code: dict[str, str] = {}
-        polyglot_exts = {".py", ".go", ".rs", ".c", ".cpp", ".cc", ".cxx", ".h", ".hpp", ".js", ".mjs", ".ts", ".sh", ".json", ".sql"}
+        polyglot_exts = {".py", ".go", ".rs", ".c", ".cpp", ".cc", ".cxx", ".js", ".mjs", ".ts", ".sh"}
         for f in sorted(Path(workspace).iterdir()):
             if f.is_file() and f.suffix.lower() in polyglot_exts:
                 try:
@@ -758,7 +758,7 @@ class MultiAgentPipeline:
                 if outcome.get("stderr"):
                     lines.append(f"        stderr preview: {str(outcome['stderr'])[:120]}")
         # attach generated code from disk
-        polyglot_exts = {".py", ".go", ".rs", ".c", ".cpp", ".cc", ".cxx", ".h", ".hpp", ".js", ".mjs", ".ts", ".sh", ".json", ".sql"}
+        polyglot_exts = {".py", ".go", ".rs", ".c", ".cpp", ".cc", ".cxx", ".js", ".mjs", ".ts", ".sh"}
         if workspace:
             source_files = sorted(p for p in Path(workspace).iterdir() if p.is_file() and p.suffix.lower() in polyglot_exts)
             if source_files:
@@ -777,7 +777,7 @@ class MultiAgentPipeline:
 
     @staticmethod
     def _latest_file_in_workspace(workspace: Path) -> Optional[str]:
-        polyglot_exts = {".py", ".go", ".rs", ".c", ".cpp", ".cc", ".cxx", ".h", ".hpp", ".js", ".mjs", ".ts", ".sh", ".json", ".sql"}
+        polyglot_exts = {".py", ".go", ".rs", ".c", ".cpp", ".cc", ".cxx", ".js", ".mjs", ".ts", ".sh"}
         try:
             files = sorted(
                 (p for p in Path(workspace).rglob("*") if p.is_file() and p.suffix.lower() in polyglot_exts),
