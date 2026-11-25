@@ -186,8 +186,8 @@ Measured on the standardized 12-task Evaluation Lab benchmark suite (`eval_17918
 
 ```bash
 # Clone the repository
-git clone https://github.com/Soumik-Dev-Ai/Sentinel-Ai-private.git
-cd Sentinel-Ai-private/v2
+git clone https://github.com/Soumik-Dev-Ai/sentinel-ai.git
+cd sentinel-ai/v2
 
 # Set up Python virtual environment
 python -m venv .venv
