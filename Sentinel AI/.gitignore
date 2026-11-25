@@ -12,6 +12,11 @@ __pycache__/
 dist/
 *.egg-info/
 
+# runtime logs and pid files
+*.pid
+*.log
+*.err
+
 # tooling
 .mypy_cache/
 .ruff_cache/
@@ -29,3 +34,16 @@ Thumbs.db
 .vercel
 .env*
 project_analysis.md
+
+# temporary scratch scripts
+debug_*.py
+phase*.py
+run_*.py
+server_p6.*
+summarize_eval.py
+parse_interim.py
+test_apis*.py
+test_complex.py
+frontend/*.pid
+frontend/patch.py
+frontend/phase7_smoke.cjs

@@ -1,6 +1,8 @@
 from __future__ import annotations
 import json
+import time
 from typing import Any
+from backend import config
 from backend.llm.contracts import Provider, Reply
 
 class OpenAIProvider(Provider):
@@ -14,6 +16,10 @@ class OpenAIProvider(Provider):
         self._max_tokens = max_tokens
         self._client = None
         self._client_attempted = False
+        self._resolved_at: float = 0.0
+        self._known_models: set[str] = set()
+        self._dead_models: set[str] = set()
+        self._last_model_diff: dict[str, list[str]] = {"added": [], "removed": []}
 
     def _ensure_client(self) -> None:
         """Lazily build the OpenAI client on first use (avoids slow SSL/head-of-line at init)."""
@@ -35,21 +41,25 @@ class OpenAIProvider(Provider):
     @property
     def name(self) -> str: return "openai"
         
-    def _resolve_dynamic_model(self) -> str:
+    def _resolve_dynamic_model(self, force: bool = False) -> str:
         self._ensure_client()
-        if self._model: return self._model
-        
+        ttl = getattr(config, "MODEL_REFRESH_TTL_SECONDS", 3600)
+        if self._model and not force:
+            if self._resolved_at == 0.0 or (time.time() - self._resolved_at) < ttl:
+                return self._model
+            
         # Hardcoded overrides for providers with massive catalogs or non-standard names
         if self.name == "cohere":
             self._model = "command-r-plus-08-2024" if self._reasoning_type == "advanced" else "command-r-08-2024"
+            self._resolved_at = time.time()
             return self._model
             
         # Dynamic lookup (runs for Groq, NVIDIA NIM, Cerebras, SambaNova, OpenRouter, etc.)
         try:
             if not self._client: return "default-model"
             model_list = self._client.models.list()
-            valid_families = ["llama", "gpt", "claude", "mistral", "qwen", "mixtral", "codellama", "nemotron", "gemma", "phi", "deepseek"]
-            invalid_families = ["whisper", "dall", "embed", "orpheus", "guard", "vision", "audio"]
+            valid_families = ["llama", "gpt", "claude", "mistral", "qwen", "mixtral", "codellama", "nemotron", "gemma", "phi", "deepseek", "kimi", "moonshot"]
+            invalid_families = ["whisper", "dall", "embed", "orpheus", "guard", "vision", "audio", "safeguard", "tts"]
             
             if self.name == "openrouter":
                 models = [m.id for m in model_list.data if ":free" in m.id.lower()]
@@ -64,12 +74,21 @@ class OpenAIProvider(Provider):
                 if not models:
                     models = [m.id for m in model_list.data if "embed" not in m.id.lower() and "guard" not in m.id.lower()]
 
+            new_set = set(models)
+            if self._known_models:
+                self._last_model_diff = {
+                    "added": sorted(new_set - self._known_models),
+                    "removed": sorted(self._known_models - new_set),
+                }
+            self._known_models = new_set
+            models = [m for m in models if m not in self._dead_models] or models
+
 
             # Classify models by size indicators in their names
-            heavy_models = [m for m in models if any(size in m.lower() for size in ["70b", "72b", "90b", "120b", "405b", "large", "plus"])]
-            light_models = [m for m in models if any(size in m.lower() for size in ["8b", "7b", "11b", "14b", "27b", "31b", "32b", "33b", "instant", "small", "mini"])]
+            heavy_models = [m for m in models if any(size in m.lower() for size in ["70b", "72b", "90b", "120b", "405b", "large", "plus", "kimi", "32b", "31b"])]
+            light_models = [m for m in models if any(size in m.lower() for size in ["8b", "7b", "11b", "14b", "17b", "20b", "27b", "31b", "32b", "33b", "instant", "small", "mini"])]
             
-            if self._reasoning_type == "advanced":
+            if self._reasoning_type in ("advanced", "logical"):
                 self._model = heavy_models[0] if heavy_models else models[0]
                 self._fallback_models = heavy_models[1:] + light_models + models
             elif self._reasoning_type == "fast":
@@ -87,10 +106,12 @@ class OpenAIProvider(Provider):
                     seen.add(m)
                     deduped.append(m)
             self._fallback_models = deduped
+            self._resolved_at = time.time()
                     
         except Exception:
-            self._model = "default-model"
-            self._fallback_models = []
+            if not self._model:
+                self._model = "default-model"
+                self._fallback_models = []
             
         return self._model
 
@@ -108,9 +129,10 @@ class OpenAIProvider(Provider):
         kwargs: dict[str, Any] = {"model": self._model, "messages": messages, "max_tokens": self._max_tokens, "temperature": 0.1}
         
         # Provider free-tier limits (Output Tokens)
-        limits = {"groq": 800, "cerebras": 4000, "sambanova": 4000, "nvidia_nim": 4000, "cohere": 4000}
+        limits = {"groq": 4096, "cerebras": 4000, "sambanova": 4000, "nvidia_nim": 4000, "cohere": 4000}
         cap = limits.get(self.name, 4096)
-        if kwargs.get("max_tokens", cap) > cap:
+        cur_max = kwargs.get("max_tokens")
+        if cur_max is None or cur_max > cap:
             kwargs["max_tokens"] = cap
             
         if formatted_tools: kwargs["tools"] = formatted_tools
@@ -119,6 +141,8 @@ class OpenAIProvider(Provider):
         import time
         try:
             resp = self._client.chat.completions.create(**kwargs)
+            if hasattr(resp, "choices") and resp.choices and not (resp.choices[0].message.content or resp.choices[0].message.tool_calls):
+                raise RuntimeError("400 empty model response")
         except Exception as e:
             err_str = str(e).lower()
             if "max_tokens" in err_str:
@@ -128,7 +152,7 @@ class OpenAIProvider(Provider):
                 except Exception as e2:
                     err_str = str(e2).lower()
             
-            if "resp" not in locals():
+            if "resp" not in locals() or (hasattr(resp, "choices") and resp.choices and not (resp.choices[0].message.content or resp.choices[0].message.tool_calls)):
                 if any(x in err_str for x in ["429", "rate limit", "capacity", "quota", "too many requests", "404", "not found", "402", "insufficient credits", "payment required", "403", "permission denied", "disabled", "400", "unavailable", "timeout", "timed out", "timedout"]):
                     
                     # Reactive backoff
@@ -137,15 +161,29 @@ class OpenAIProvider(Provider):
                         
                     # Rate limited or model locked. Try fallback models if available!
                     success = False
-                    if hasattr(self, "_fallback_models") and self._fallback_models:
-                        for fallback in self._fallback_models:
+                    acct_errs = ["freetiererror", "insufficient credits", "wrong_api_key", "invalid_api_key"]
+                    dead_errs = ["404", "not found", "decommissioned", "disabled", "400", "tokens per day"]
+                    if not any(ae in err_str for ae in acct_errs) and hasattr(self, "_fallback_models") and self._fallback_models:
+                        for fallback in list(self._fallback_models)[:2]:
                             kwargs["model"] = fallback
                             try:
                                 resp = self._client.chat.completions.create(**kwargs)
-                                self._model = fallback # permanently switch to the working model
+                                if hasattr(resp, "choices") and resp.choices and not (resp.choices[0].message.content or resp.choices[0].message.tool_calls):
+                                    raise RuntimeError("400 empty model response")
+                                prev_model = self._model
+                                self._model = fallback
+                                self._fallback_models.remove(fallback)
+                                if prev_model and prev_model not in self._fallback_models and all(bad not in err_str for bad in dead_errs):
+                                    self._fallback_models.append(prev_model)
                                 success = True
                                 break
-                            except Exception:
+                            except Exception as fb_e:
+                                fb_err = str(fb_e).lower()
+                                if any(dead in fb_err for dead in dead_errs):
+                                    self._dead_models.add(fallback)
+                                    self._fallback_models.remove(fallback)
+                                if any(ae in fb_err for ae in acct_errs):
+                                    break
                                 continue
                     
                     if not success:

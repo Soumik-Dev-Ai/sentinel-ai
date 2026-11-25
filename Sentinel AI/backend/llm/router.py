@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import concurrent.futures
+import threading
 import time
 from typing import Any
 
@@ -27,17 +28,21 @@ class LLMRouter:
     def __init__(self, provider_timeout: int | None = None, providers: list[Provider] | None = None):
         self._provider_timeout = provider_timeout or config.PROVIDER_TIMEOUT_SECONDS
         self._provider_events: list[dict[str, Any]] = []
-        self._executor = concurrent.futures.ThreadPoolExecutor(max_workers=2)
+        self._executor = concurrent.futures.ThreadPoolExecutor(max_workers=8)
         self._last_successful_provider: str = ""
         self._last_successful_model: str = ""
+        self._probe_lock = threading.Lock()
+        self._probe_cache: dict[str, Any] | None = None
+        self._probe_ts: float = 0.0
 
         self._tier_providers: dict[str, list[dict[str, Any]]] = {}
         if providers is not None:
-            # Explicit (mock) chain: seed the default tier, skip config.
-            self._tier_providers["strategic"] = [
-                {"provider": p, "is_preferred": True, "is_free": True, "is_backup": False, "usage_count": 0}
-                for p in providers
-            ]
+            # Explicit (mock) chain: seed all tiers, skip config.
+            for tier in ("strategic", "coding", "fast_eval"):
+                self._tier_providers[tier] = [
+                    {"provider": p, "is_preferred": True, "is_free": True, "is_backup": False, "usage_count": 0}
+                    for p in providers
+                ]
         else:
             for tier, models in config.MODEL_TIERS.items():
                 self._tier_providers[tier] = []
@@ -85,12 +90,17 @@ class LLMRouter:
         return _mk(*factories[name])
 
     def _sort_providers(self, providers: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        now = time.time()
+        cooldown = getattr(config, "PROVIDER_HEALTH_COOLDOWN_SECONDS", 300)
+        for p in providers:
+            if p.get("fail_count", 0) > 0 and (now - p.get("last_fail_ts", 0.0)) >= cooldown:
+                p["fail_count"] = 0
         providers.sort(
             key=lambda x: (
+                -x.get("fail_count", 0),
                 not x.get("is_backup", False),  # Normal providers (True) sorted before backups (False)
                 x.get("is_preferred", False),
                 x.get("is_free", False),
-                -x.get("usage_count", 0)
             ),
             reverse=True,
         )
@@ -121,11 +131,14 @@ class LLMRouter:
                 reply = future.result(timeout=self._provider_timeout)
 
                 p["usage_count"] += 1
+                p["fail_count"] = 0
                 self._last_successful_provider = provider_inst.name
                 self._last_successful_model = getattr(provider_inst, "_model", "dynamic")
                 return reply
 
             except concurrent.futures.TimeoutError:
+                p["fail_count"] = p.get("fail_count", 0) + 1
+                p["last_fail_ts"] = time.time()
                 last_error = f"{provider_inst.name} ({getattr(provider_inst, '_model', 'dynamic')}) timed out after {self._provider_timeout}s"
                 error_chain.append(last_error)
                 self._provider_events.append({
@@ -135,6 +148,8 @@ class LLMRouter:
                     "reason": last_error
                 })
             except Exception as e:
+                p["fail_count"] = p.get("fail_count", 0) + 1
+                p["last_fail_ts"] = time.time()
                 last_error = f"{provider_inst.name} failed: {str(e)}"
                 error_chain.append(last_error)
                 self._provider_events.append({
@@ -163,3 +178,41 @@ class LLMRouter:
     @provider_events.setter
     def provider_events(self, value):
         self._provider_events = value
+
+    def probe_providers(self, active: bool = False, min_interval: int | None = None) -> dict[str, Any]:
+        """Timely model-change detection and rate-limit-safe health probe."""
+        now = time.time()
+        interval = getattr(config, "PROVIDER_HEALTH_COOLDOWN_SECONDS", 300) if min_interval is None else min_interval
+        with self._probe_lock:
+            if self._probe_cache and (now - self._probe_ts) < interval and not (active and not self._probe_cache.get("active_probe")):
+                return {**self._probe_cache, "cached": True}
+
+            unique: dict[str, Provider] = {}
+            for specs in self._tier_providers.values():
+                for spec in specs:
+                    prov = spec["provider"]
+                    unique.setdefault(prov.name, prov)
+
+            def _check(prov: Provider) -> dict[str, Any]:
+                t0 = time.time()
+                try:
+                    if hasattr(prov, "_resolve_dynamic_model"):
+                        try:
+                            model = prov._resolve_dynamic_model(force=True)
+                        except TypeError:
+                            model = prov._resolve_dynamic_model()
+                    else:
+                        model = getattr(prov, "model", getattr(prov, "_model", "unknown"))
+                    diff = getattr(prov, "_last_model_diff", {"added": [], "removed": []})
+                    if active:
+                        prov.chat([{"role": "user", "content": "OK"}], None, None, None)
+                    status = "ok" if model != "default-model" else "unconfigured_or_unreachable"
+                    return {"provider": prov.name, "model": model, "status": status, "latency_s": round(time.time() - t0, 2), "model_diff": diff}
+                except Exception as exc:
+                    return {"provider": prov.name, "model": getattr(prov, "_model", "unknown"), "status": "error", "latency_s": round(time.time() - t0, 2), "error": _sanitize(str(exc))[:140]}
+
+            results = list(self._executor.map(_check, unique.values()))
+            report = {"checked_at": time.time(), "cached": False, "active_probe": active, "providers": results}
+            self._probe_cache = report
+            self._probe_ts = time.time()
+            return report
