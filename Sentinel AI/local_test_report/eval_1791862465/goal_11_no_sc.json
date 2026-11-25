@@ -1,0 +1,50 @@
+{
+  "goal_id": "goal_11",
+  "spec": "Write a Python script 'broken_import.py' that crashes with ImportError. Run it, observe the crash, fix it with a graceful fallback, and run again to confirm.",
+  "self_correction_enabled": false,
+  "success": false,
+  "steps": 3,
+  "self_corrections": 0,
+  "elapsed_seconds": 69.21894884109497,
+  "memory_dump": {
+    "final_output": "Sentinel AI 2.0 \u2014 Multi-Agent Run Report\n============================================================\nGoal: Write a Python script 'broken_import.py' that crashes with ImportError. Run it, observe the crash, fix it with a graceful fallback, and run again to confirm.\nChosen plan: P1 (confidence=0.95)\n\nSubtasks:\n  [FAIL] S1 (coder) attempts=1:\n  [FAIL] S2 (executor) attempts=1:\n        file: broken_import.py\n        stderr preview: Traceback (most recent call last):\n  File \"C:\\Users\\user\\AppData\\Local\\Temp\\eval_ws_goal_11_harcrz7y\\broken_import.py\", \n  [FAIL] S3 (executor) attempts=1:\n        file: broken_import.py\n        stderr preview: Traceback (most recent call last):\n  File \"C:\\Users\\user\\AppData\\Local\\Temp\\eval_ws_goal_11_harcrz7y\\broken_import.py\", \n\nGenerated Code:\n------------------------------------------------------------\n\n#### broken_import.py\n```python\nimport nonexistent_module\n\n```",
+    "steps": [
+      {
+        "thought": "Subtask [S1]: coder assignment",
+        "tool": "MultiAgent",
+        "args": {
+          "agent": "coder"
+        },
+        "result": {
+          "resolved": false,
+          "attempts": 1
+        },
+        "correction_trigger": null
+      },
+      {
+        "thought": "Subtask [S2]: executor assignment",
+        "tool": "MultiAgent",
+        "args": {
+          "agent": "executor"
+        },
+        "result": {
+          "resolved": false,
+          "attempts": 1
+        },
+        "correction_trigger": null
+      },
+      {
+        "thought": "Subtask [S3]: executor assignment",
+        "tool": "MultiAgent",
+        "args": {
+          "agent": "executor"
+        },
+        "result": {
+          "resolved": false,
+          "attempts": 1
+        },
+        "correction_trigger": null
+      }
+    ]
+  }
+}

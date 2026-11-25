@@ -1,0 +1,50 @@
+{
+  "goal_id": "goal_2",
+  "spec": "Write a Python script 'sort_compare.py' that implements both bubble sort and merge sort. Generate a random list of 500 integers, sort it with both algorithms, measure the elapsed time for each, and print which algorithm was faster along with the times. Run the script.",
+  "self_correction_enabled": true,
+  "success": true,
+  "steps": 3,
+  "self_corrections": 0,
+  "elapsed_seconds": 143.0651614665985,
+  "memory_dump": {
+    "final_output": "Sentinel AI 2.0 \u2014 Multi-Agent Run Report\n============================================================\nGoal: Write a Python script 'sort_compare.py' that implements both bubble sort and merge sort. Generate a random list of 500 integers, sort it with both algorithms, measure the elapsed time for each, and print which algorithm was faster along with the times. Run the script.\nChosen plan: P1 (confidence=0.94)\n\nSubtasks:\n  [OK]   S1 (coder) attempts=1:\n        file: sort_compare.py\n        stdout preview: Bubble sort time: 0.009286 seconds\nMerge sort time: 0.000791 seconds\nMerge sort was faster.\n\n  [OK]   S2 (critic) attempts=1:\n  [OK]   S3 (executor) attempts=1:\n        file: sort_compare.py\n        stdout preview: Bubble sort time: 0.011389 seconds\nMerge sort time: 0.000767 seconds\nMerge sort was faster.\n\n\nGenerated Code:\n------------------------------------------------------------\n\n#### sort_compare.py\n```python\n\"\"\"sort_compare.py\n\nThis script demonstrates two classic sorting algorithms \u2013 bubble sort and merge sort \u2013 by\ngenerating a random list of 500 integers, sorting it with each algorithm, measuring the\nelapsed time, and reporting which algorithm was faster.\n\nThe implementation is fully self\u2011contained, uses only the Python standard library, and\nincludes docstrings for public functions.\n\"\"\"\n\nfrom __future__ import annotations\n\nimport random\nimport time\nfrom typing import List\n\n\ndef bubble_sort(arr: List[int]) -> List[int]:\n    \"\"\"Return a new list containing the elements of *arr* sorted using bubble sort.\n\n    The function performs an in\u2011place sort on a copy of the input list to avoid\n    mutating the caller's data.\n    \"\"\"\n    a = arr.copy()\n    n = len(a)\n    for i in range(n):\n        # Last i elements are already in place\n        for j in range(0, n - i - 1):\n            if a[j] > a[j + 1]:\n                a[j], a[j + 1] = a[j + 1], a[j]\n    return a\n\n\ndef merge_sort(arr: List[int]) -> List[int]:\n    \"\"\"Return a new list containing the elements of *arr* sorted using merge sort.\n\n    The implementation is recursive and functional \u2013 it never mutates the input list.\n    \"\"\"\n    if len(arr) <= 1:\n        return arr.copy()\n    mid = len(arr) // 2\n    left = merge_sort(arr[:mid])\n    right = merge_sort(arr[mid:])\n    return _merge(left, right)\n\n\ndef _merge(left: List[int], right: List[int]) -> List[int]:\n    \"\"\"Merge two sorted lists into a single sorted list.\"\"\"\n    merged: List[int] = []\n    i = j = 0\n    while i < len(left) and j < len(right):\n        if left[i] <= right[j]:\n            merged.append(left[i])\n            i += 1\n        else:\n            merged.append(right[j])\n            j += 1\n    # Append any remaining elements\n    merged.extend(left[i:])\n    merged.extend(right[j:])\n    return merged\n\n\ndef main() -> None:\n    \"\"\"Generate a random list, sort it with both algorithms, and report timings.\"\"\"\n    random.seed(0)  # deterministic for reproducibility\n    data = [random.randint(0, 1000) for _ in range(500)]\n\n    # Bubble sort timing\n    start = time.perf_counter()\n    bubble_sorted = bubble_sort(data)\n    bubble_time = time.perf_counter() - start\n\n    # Merge sort timing\n    start = time.perf_counter()\n    merge_sorted = merge_sort(data)\n    merge_time = time.perf_counter() - start\n\n    # Verify correctness (optional but good practice)\n    assert bubble_sorted == merge_sorted, \"Sorting algorithms produced different results\"\n\n    # Output results\n    print(f\"Bubble sort time: {bubble_time:.6f} seconds\")\n    print(f\"Merge sort time: {merge_time:.6f} seconds\")\n    if bubble_time < merge_time:\n        print(\"Bubble sort was faster.\")\n    elif merge_time < bubble_time:\n        print(\"Merge sort was faster.\")\n    else:\n        print(\"Both algorithms took the same amount of time.\")\n\n\nif __name__ == \"__main__\":\n    main()\n\n```",
+    "steps": [
+      {
+        "thought": "Subtask [S1]: coder assignment",
+        "tool": "MultiAgent",
+        "args": {
+          "agent": "coder"
+        },
+        "result": {
+          "resolved": true,
+          "attempts": 1
+        },
+        "correction_trigger": null
+      },
+      {
+        "thought": "Subtask [S2]: critic assignment",
+        "tool": "MultiAgent",
+        "args": {
+          "agent": "critic"
+        },
+        "result": {
+          "resolved": true,
+          "attempts": 1
+        },
+        "correction_trigger": null
+      },
+      {
+        "thought": "Subtask [S3]: executor assignment",
+        "tool": "MultiAgent",
+        "args": {
+          "agent": "executor"
+        },
+        "result": {
+          "resolved": true,
+          "attempts": 1
+        },
+        "correction_trigger": null
+      }
+    ]
+  }
+}

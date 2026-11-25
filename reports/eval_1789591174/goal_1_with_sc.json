@@ -1,0 +1,38 @@
+{
+  "goal_id": "goal_1",
+  "spec": "Write a Python script 'hello.py' that prints 'Hello World'.",
+  "self_correction_enabled": true,
+  "success": true,
+  "steps": 2,
+  "self_corrections": 0,
+  "elapsed_seconds": 754.1585326194763,
+  "memory_dump": {
+    "final_output": "Sentinel AI 2.0 \u2014 Multi-Agent Run Report\n============================================================\nGoal: Write a Python script 'hello.py' that prints 'Hello World'.\nChosen plan: P2 (confidence=0.9)\n\nSubtasks:\n  [OK]   F1 (coder) attempts=2:\n        file: hello.py\n        stdout preview: Hello World\n\n  [OK]   F2 (executor) attempts=1:\n        file: hello.py\n        stdout preview: Hello World\n\n\nGenerated Code:\n------------------------------------------------------------\n\n#### hello.py\n```python\n\"\"\"Hello World script.\n\nThis module defines a single function :func:`greet` that prints the\nmessage \"Hello World\".  The function is executed when the module is run\nas a script.\n\"\"\"\n\ndef greet() -> None:\n    \"\"\"Print the greeting message.\n\n    The function performs no input validation because it has no\n    parameters.  It simply outputs the required string.\n    \"\"\"\n    print(\"Hello World\")\n\n# Execute the greeting when the script is run directly.\nif __name__ == \"__main__\":\n    greet()\n\n```\n\n#### main.py\n```python\n\"\"\"Review script for hello.py.\n\nThis script verifies that a file named ``hello.py`` exists in the current\nworking directory and that it contains exactly one print statement that\noutputs the string ``Hello World``.  It ignores comments, blank lines and\nshebangs, and reports any deviations.\n\nThe script is intentionally simple, uses only the standard library, and\nprovides clear output for the user.\n\"\"\"\n\nfrom __future__ import annotations\n\nimport re\nimport sys\nfrom pathlib import Path\n\n__all__ = [\"check_hello_file\", \"main\"]\n\n# Regular expression that matches a print statement with the exact\n# string \"Hello World\" (single or double quotes).  It allows optional\n# whitespace around the parentheses and the string.\n_PRINT_RE = re.compile(r\"^\\s*print\\s*\\(\\s*['\\\"]Hello World['\\\"]\\s*\\)\\s*$\")\n\n\ndef check_hello_file(path: Path) -> bool:\n    \"\"\"Return ``True`` if *path* contains a valid hello.py.\n\n    The function checks that:\n    1. The file exists.\n    2. It contains exactly one print statement that outputs ``Hello World``.\n    3. No other executable code is present.\n\n    Parameters\n    ----------\n    path: Path\n        Path to the file to check.\n\n    Returns\n    -------\n    bool\n        ``True`` if the file meets all criteria, ``False`` otherwise.\n    \"\"\"\n    if not path.is_file():\n        print(f\"\u274c File not found: {path}\")\n        return False\n\n    # Read all lines, stripping trailing newlines.\n    lines = [line.rstrip(\"\\n\") for line in path.read_text(encoding=\"utf-8\").splitlines()]\n\n    # Filter out comments, blank lines and shebangs.\n    code_lines = [ln for ln in lines if ln.strip() and not ln.lstrip().startswith(\"#\") and not ln.lstrip().startswith(\"#!\")]\n\n    # Find all print statements.\n    print_lines = [ln for ln in code_lines if _PRINT_RE.match(ln)]\n\n    if len(print_lines) != 1:\n        print(f\"\u274c Expected exactly one print statement, found {len(print_lines)}.\")\n        return False\n\n    # Ensure no other executable lines exist.\n    if len(code_lines) != 1:\n        print(\"\u274c Additional executable code detected.\")\n        return False\n\n    print(\"\u2705 hello.py is valid and meets the goal.\")\n    return True\n\n\ndef main() -> None:\n    \"\"\"Entry point for the review script.\n\n    The script expects ``hello.py`` to be in the current working directory.\n    It prints a success or failure message and exits with status 0 on\n    success, 1 on failure.\n    \"\"\"\n    path = Path(\"hello.py\")\n    success = check_hello_file(path)\n    sys.exit(0 if success else 1)\n\n\nif __name__ == \"__main__\":\n    main()\n\n```",
+    "steps": [
+      {
+        "thought": "Subtask [F1]: coder assignment",
+        "tool": "MultiAgent",
+        "args": {
+          "agent": "coder"
+        },
+        "result": {
+          "resolved": true,
+          "attempts": 2
+        },
+        "correction_trigger": null
+      },
+      {
+        "thought": "Subtask [F2]: executor assignment",
+        "tool": "MultiAgent",
+        "args": {
+          "agent": "executor"
+        },
+        "result": {
+          "resolved": true,
+          "attempts": 1
+        },
+        "correction_trigger": null
+      }
+    ]
+  }
+}

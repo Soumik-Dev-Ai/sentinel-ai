@@ -1,0 +1,13 @@
+{
+  "goal_id": "goal_3",
+  "spec": "Use the FlakyNetTool to fetch data from 'https://example.com' and write the HTML content to 'index.html'. If it fails, retry until it succeeds.",
+  "self_correction_enabled": false,
+  "success": false,
+  "steps": 0,
+  "self_corrections": 0,
+  "elapsed_seconds": 0,
+  "memory_dump": {
+    "final_output": "Agent crashed: RuntimeError: All providers in tier 'coding' exhausted. Chain of failures: groq failed: Error code: 429 - {'error': {'message': 'Rate limit reached for model `openai/gpt-oss-120b` in organization `org_01kvysb4bwemfv98v689vckj3k` service tier `on_demand` on tokens per minute (TPM): Limit 8000, Used 6558, Requested 1456. Please try again in 105ms. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing', 'type': 'tokens', 'code': 'rate_limit_exceeded'}} | sambanova failed: The requested model (Meta-Llama-3.1-8B-Instruct) is not available on SambaNova Cloud. For more information, please visit https://docs.sambanova.ai/cloud/docs/resources/deprecations. For further inquiries, please contact our support team at help@sambanova.ai. | openrouter failed: Error code: 402 - {'error': {'message': 'Insufficient credits. This account never purchased credits. Make sure your key is on the correct account or org, and if so, purchase more at https://openrouter.ai/settings/credits', 'code': 402, 'metadata': {'limit_source': 'openrouter_credits', 'remedy_hint': 'Add credits at https://openrouter.ai/settings/credits, or lower max_tokens / prompt size to fit your remaining balance.'}}} | nvidia_nim failed: Error code: 410 - {'type': 'about:blank', 'title': 'Gone', 'status': 410, 'detail': \"The model 'meta/llama-3.1-8b-instruct' has reached its end of life on 2026-08-26T09:00:00Z and is no longer available.\"}",
+    "steps": []
+  }
+}

@@ -1,0 +1,50 @@
+{
+  "goal_id": "goal_11",
+  "spec": "Write a Python script 'broken_import.py' that crashes with ImportError. Run it, observe the crash, fix it with a graceful fallback, and run again to confirm.",
+  "self_correction_enabled": true,
+  "success": true,
+  "steps": 3,
+  "self_corrections": 2,
+  "elapsed_seconds": 81.30788564682007,
+  "memory_dump": {
+    "final_output": "Sentinel AI 2.0 \u2014 Multi-Agent Run Report\n============================================================\nGoal: Write a Python script 'broken_import.py' that crashes with ImportError. Run it, observe the crash, fix it with a graceful fallback, and run again to confirm.\nChosen plan: P1 (confidence=0.95)\n\nSubtasks:\n  [FAIL] S1 (executor) attempts=1:\n        file: main.py\n        stderr preview: File not found: C:\\Users\\user\\AppData\\Local\\Temp\\eval_ws_goal_11_ttrb_z7k\\main.py\n  [OK]   S2 (coder) attempts=3:\n        file: broken_import.py\n        stdout preview: ImportError caught: nonexistent_module_12345 not available.\nFallback feature executed (real module not found).\n\n  [OK]   S3 (executor) attempts=1:\n        file: broken_import.py\n        stdout preview: ImportError caught: nonexistent_module_12345 not available.\nFallback feature executed (real module not found).\n\n\nGenerated Code:\n------------------------------------------------------------\n\n#### broken_import.py\n```python\n\"\"\"broken_import.py\n\nDemonstrates graceful handling of a missing module via ImportError.\n\"\"\"\n\ndef fallback_feature() -> None:\n    \"\"\"Dummy implementation used when the real module is unavailable.\"\"\"\n    print(\"Fallback feature executed (real module not found).\")\n\n\ndef main() -> None:\n    \"\"\"Try to import a non\u2011existent module and use fallback on failure.\"\"\"\n    try:\n        # Attempt to import a module that does not exist in the standard library\n        import nonexistent_module_12345  # type: ignore\n        # If somehow it exists, call a hypothetical function\n        nonexistent_module_12345.do_something()  # pragma: no cover\n    except ImportError:\n        print(\"ImportError caught: nonexistent_module_12345 not available.\")\n        fallback_feature()\n\n\nif __name__ == \"__main__\":\n    main()\n\n```",
+    "steps": [
+      {
+        "thought": "Subtask [S1]: executor assignment",
+        "tool": "MultiAgent",
+        "args": {
+          "agent": "executor"
+        },
+        "result": {
+          "resolved": false,
+          "attempts": 1
+        },
+        "correction_trigger": null
+      },
+      {
+        "thought": "Subtask [S2]: coder assignment",
+        "tool": "MultiAgent",
+        "args": {
+          "agent": "coder"
+        },
+        "result": {
+          "resolved": true,
+          "attempts": 3
+        },
+        "correction_trigger": null
+      },
+      {
+        "thought": "Subtask [S3]: executor assignment",
+        "tool": "MultiAgent",
+        "args": {
+          "agent": "executor"
+        },
+        "result": {
+          "resolved": true,
+          "attempts": 1
+        },
+        "correction_trigger": null
+      }
+    ]
+  }
+}

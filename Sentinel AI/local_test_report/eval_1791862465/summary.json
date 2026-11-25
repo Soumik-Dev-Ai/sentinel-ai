@@ -1,0 +1,211 @@
+{
+  "run_name": "eval_1791862465",
+  "timestamp": 1791862465,
+  "total_goals": 12,
+  "metrics_with_self_correction": {
+    "completion_rate": 0.6666666666666666,
+    "avg_steps": 2.3333333333333335,
+    "total_self_corrections": 14,
+    "avg_elapsed": 84.71380146344502
+  },
+  "metrics_baseline": {
+    "completion_rate": 0.5833333333333334,
+    "avg_steps": 2.5,
+    "total_self_corrections": 0,
+    "avg_elapsed": 37.8177675207456
+  },
+  "runs": [
+    {
+      "goal_id": "goal_1",
+      "self_correction_enabled": false,
+      "success": false,
+      "steps": 2,
+      "self_corrections": 0,
+      "elapsed_seconds": 34.48
+    },
+    {
+      "goal_id": "goal_1",
+      "self_correction_enabled": true,
+      "success": true,
+      "steps": 2,
+      "self_corrections": 0,
+      "elapsed_seconds": 55.98
+    },
+    {
+      "goal_id": "goal_10",
+      "self_correction_enabled": false,
+      "success": true,
+      "steps": 2,
+      "self_corrections": 0,
+      "elapsed_seconds": 35.09
+    },
+    {
+      "goal_id": "goal_10",
+      "self_correction_enabled": true,
+      "success": true,
+      "steps": 2,
+      "self_corrections": 1,
+      "elapsed_seconds": 87.21
+    },
+    {
+      "goal_id": "goal_11",
+      "self_correction_enabled": false,
+      "success": false,
+      "steps": 3,
+      "self_corrections": 0,
+      "elapsed_seconds": 69.22
+    },
+    {
+      "goal_id": "goal_11",
+      "self_correction_enabled": true,
+      "success": true,
+      "steps": 3,
+      "self_corrections": 2,
+      "elapsed_seconds": 81.31
+    },
+    {
+      "goal_id": "goal_12",
+      "self_correction_enabled": false,
+      "success": true,
+      "steps": 2,
+      "self_corrections": 0,
+      "elapsed_seconds": 26.11
+    },
+    {
+      "goal_id": "goal_12",
+      "self_correction_enabled": true,
+      "success": true,
+      "steps": 2,
+      "self_corrections": 0,
+      "elapsed_seconds": 29.22
+    },
+    {
+      "goal_id": "goal_2",
+      "self_correction_enabled": false,
+      "success": true,
+      "steps": 2,
+      "self_corrections": 0,
+      "elapsed_seconds": 23.29
+    },
+    {
+      "goal_id": "goal_2",
+      "self_correction_enabled": true,
+      "success": false,
+      "steps": 3,
+      "self_corrections": 2,
+      "elapsed_seconds": 159.25
+    },
+    {
+      "goal_id": "goal_3",
+      "self_correction_enabled": false,
+      "success": false,
+      "steps": 3,
+      "self_corrections": 0,
+      "elapsed_seconds": 18.77
+    },
+    {
+      "goal_id": "goal_3",
+      "self_correction_enabled": true,
+      "success": false,
+      "steps": 3,
+      "self_corrections": 2,
+      "elapsed_seconds": 105.72
+    },
+    {
+      "goal_id": "goal_4",
+      "self_correction_enabled": false,
+      "success": true,
+      "steps": 4,
+      "self_corrections": 0,
+      "elapsed_seconds": 67.32
+    },
+    {
+      "goal_id": "goal_4",
+      "self_correction_enabled": true,
+      "success": true,
+      "steps": 2,
+      "self_corrections": 1,
+      "elapsed_seconds": 94.85
+    },
+    {
+      "goal_id": "goal_5",
+      "self_correction_enabled": false,
+      "success": false,
+      "steps": 2,
+      "self_corrections": 0,
+      "elapsed_seconds": 31.44
+    },
+    {
+      "goal_id": "goal_5",
+      "self_correction_enabled": true,
+      "success": false,
+      "steps": 2,
+      "self_corrections": 2,
+      "elapsed_seconds": 89.18
+    },
+    {
+      "goal_id": "goal_6",
+      "self_correction_enabled": false,
+      "success": true,
+      "steps": 2,
+      "self_corrections": 0,
+      "elapsed_seconds": 24.83
+    },
+    {
+      "goal_id": "goal_6",
+      "self_correction_enabled": true,
+      "success": true,
+      "steps": 2,
+      "self_corrections": 2,
+      "elapsed_seconds": 61.87
+    },
+    {
+      "goal_id": "goal_7",
+      "self_correction_enabled": false,
+      "success": true,
+      "steps": 3,
+      "self_corrections": 0,
+      "elapsed_seconds": 41.6
+    },
+    {
+      "goal_id": "goal_7",
+      "self_correction_enabled": true,
+      "success": true,
+      "steps": 3,
+      "self_corrections": 0,
+      "elapsed_seconds": 142.06
+    },
+    {
+      "goal_id": "goal_8",
+      "self_correction_enabled": false,
+      "success": false,
+      "steps": 3,
+      "self_corrections": 0,
+      "elapsed_seconds": 46.36
+    },
+    {
+      "goal_id": "goal_8",
+      "self_correction_enabled": true,
+      "success": false,
+      "steps": 2,
+      "self_corrections": 2,
+      "elapsed_seconds": 65.99
+    },
+    {
+      "goal_id": "goal_9",
+      "self_correction_enabled": false,
+      "success": true,
+      "steps": 2,
+      "self_corrections": 0,
+      "elapsed_seconds": 35.3
+    },
+    {
+      "goal_id": "goal_9",
+      "self_correction_enabled": true,
+      "success": true,
+      "steps": 2,
+      "self_corrections": 0,
+      "elapsed_seconds": 43.92
+    }
+  ]
+}

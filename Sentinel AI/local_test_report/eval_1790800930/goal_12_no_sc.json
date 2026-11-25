@@ -1,0 +1,13 @@
+{
+  "goal_id": "goal_12",
+  "spec": "Write a Python script 'binary_search.py' implementing iterative binary search with at least 5 test cases covering edge scenarios. Run the tests.",
+  "self_correction_enabled": false,
+  "success": false,
+  "steps": 0,
+  "self_corrections": 0,
+  "elapsed_seconds": 0,
+  "memory_dump": {
+    "final_output": "Agent crashed: RuntimeError: All providers in tier 'strategic' exhausted. Chain of failures: groq failed: Error code: 429 - {'error': {'message': 'Rate limit reached for model `openai/gpt-oss-20b` in organization `org_01kvysb4bwemfv98v689vckj3k` service tier `on_demand` on tokens per day (TPD): Limit 200000, Used 199706, Requested 1209. Please try again in 6m35.28s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing', 'type': 'tokens', 'code': 'rate_limit_exceeded'}} | cohere failed: 429 Client Error: Too Many Requests for url: https://api.cohere.com/v1/chat | cerebras failed: Error code: 401 - {'message': 'Wrong API Key', 'type': 'invalid_request_error', 'param': 'api_key', 'code': 'wrong_api_key'} | sambanova failed: Error code: 429 - {'error': {'code': None, 'message': 'Meta-Llama-3.3-70B-Instruct-8k is currently experiencing high demand. Please try again later!', 'param': None, 'type': ''}, 'request_id': 'b43b98fd-a2b8-48b1-8554-82a903a720de'} | openrouter failed: Error code: 402 - {'error': {'message': 'Insufficient credits. This account never purchased credits. Make sure your key is on the correct account or org, and if so, purchase more at https://openrouter.ai/settings/credits', 'code': 402, 'metadata': {'limit_source': 'openrouter_credits', 'remedy_hint': 'Add credits at https://openrouter.ai/settings/credits, or lower max_tokens / prompt size to fit your remaining balance.'}}} | nvidia_nim (meta/codellama-70b) timed out after 60s",
+    "steps": []
+  }
+}

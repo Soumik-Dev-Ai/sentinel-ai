@@ -1,0 +1,13 @@
+{
+  "goal_id": "goal_3",
+  "spec": "Write a Python script 'csv_analyzer.py' that reads 'data.csv', calculates the mean, median, and standard deviation of the 'value' column (without using pandas), and writes the results to 'stats.txt'. Run the script.",
+  "self_correction_enabled": false,
+  "success": false,
+  "steps": 0,
+  "self_corrections": 0,
+  "elapsed_seconds": 0,
+  "memory_dump": {
+    "final_output": "Agent crashed: NameError: name 'config' is not defined",
+    "steps": []
+  }
+}

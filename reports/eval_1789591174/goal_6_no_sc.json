@@ -1,0 +1,86 @@
+{
+  "goal_id": "goal_6",
+  "spec": "Write a Python script 'fetch_todo.py' that uses the 'urllib.request' module to fetch JSON data from 'https://jsonplaceholder.typicode.com/todos/1', extract the 'title', and write it to 'todo.txt'. Run the script to generate the file.",
+  "self_correction_enabled": false,
+  "success": false,
+  "steps": 6,
+  "self_corrections": 3,
+  "elapsed_seconds": 356.6018075942993,
+  "memory_dump": {
+    "final_output": "Sentinel AI 2.0 \u2014 Multi-Agent Run Report\n============================================================\nGoal: Write a Python script 'fetch_todo.py' that uses the 'urllib.request' module to fetch JSON data from 'https://jsonplaceholder.typicode.com/todos/1', extract the 'title', and write it to 'todo.txt'. Run the script to generate the file.\nChosen plan: P3 (confidence=0.78)\n\nSubtasks:\n  [FAIL] F1 (coder) attempts=1:\n  [OK]   F2 (executor) attempts=1:\n        file: fetch_todo.py\n  [FAIL] F3 (coder) attempts=1:\n  [OK]   F4 (executor) attempts=1:\n        file: fetch_todo.py\n        stdout preview: URL to fetch: https://jsonplaceholder.typicode.com/todos/1\n\n  [FAIL] F5 (coder) attempts=1:\n  [OK]   F6 (executor) attempts=1:\n        file: fetch_todo.py\n\nGenerated Code:\n------------------------------------------------------------\n\n#### fetch_todo.py\n```python\nimport json\nimport urllib.request\n\n\n# Define a function to fetch the title from a URL\ndef fetch_title(url):\n    try:\n        # Open the URL and read the response\n        with urllib.request.urlopen(url) as response:\n            data = response.read().decode('utf-8')\n            # Parse the JSON data\n            json_data = json.loads(data)\n            # Extract and return the title\n            return json_data['title']\n    except urllib.error.URLError as e:\n        print(f'Network error: {e}')\n        return None\n    except json.JSONDecodeError as e:\n        print(f'JSON parsing error: {e}')\n        return None\n\n\n# Main function to fetch and write the title\ndef main():\n    url = 'https://jsonplaceholder.typicode.com/todos/1'\n    title = fetch_title(url)\n    if title:\n        with open('todo.txt', 'w') as file:\n            file.write(title)\n\n\nif __name__ == '__main__':\n    main()\n```\n\n#### main.py\n```python\n\"\"\"Utility module for extracting the 'title' field from a todo dictionary.\n\nThis module defines a single public function `extract_title` which validates its input\nand returns the value associated with the ``title`` key. It raises clear exceptions\nif the input is not a dictionary or if the required key is absent.\n\"\"\"\n\nfrom __future__ import annotations\n\n\ndef extract_title(todo: dict) -> str:\n    \"\"\"Return the ``title`` value from a todo dictionary.\n\n    Args:\n        todo: A dictionary representing a todo item, typically obtained from\n            ``json.loads`` of the API response.\n\n    Returns:\n        The string value associated with the ``title`` key.\n\n    Raises:\n        TypeError: If ``todo`` is not a dictionary.\n        KeyError: If the ``title`` key is missing.\n    \"\"\"\n    # Ensure the input is a dictionary; otherwise the caller passed an unexpected type.\n    if not isinstance(todo, dict):\n        raise TypeError(\"Expected a dict containing todo data, got %s\" % type(todo).__name__)\n\n    # Attempt to retrieve the title; provide a helpful error if it does not exist.\n    try:\n        title = todo[\"title\"]\n    except KeyError as exc:\n        raise KeyError(\"The provided dict does not contain a 'title' key\") from exc\n\n    # The API guarantees a string, but we defensively ensure the returned value is a string.\n    if not isinstance(title, str):\n        raise TypeError(\"The 'title' value is expected to be a string, got %s\" % type(title).__name__)\n    return title\n\n\nif __name__ == \"__main__\":\n    # Simple demonstration when run directly.\n    sample = {\"userId\": 1, \"id\": 1, \"title\": \"delectus aut autem\", \"completed\": False}\n    print(extract_title(sample))\n\n```",
+    "steps": [
+      {
+        "thought": "Subtask [F1]: coder assignment",
+        "tool": "MultiAgent",
+        "args": {
+          "agent": "coder"
+        },
+        "result": {
+          "resolved": false,
+          "attempts": 1
+        },
+        "correction_trigger": null
+      },
+      {
+        "thought": "Subtask [F2]: executor assignment",
+        "tool": "MultiAgent",
+        "args": {
+          "agent": "executor"
+        },
+        "result": {
+          "resolved": true,
+          "attempts": 1
+        },
+        "correction_trigger": null
+      },
+      {
+        "thought": "Subtask [F3]: coder assignment",
+        "tool": "MultiAgent",
+        "args": {
+          "agent": "coder"
+        },
+        "result": {
+          "resolved": false,
+          "attempts": 1
+        },
+        "correction_trigger": null
+      },
+      {
+        "thought": "Subtask [F4]: executor assignment",
+        "tool": "MultiAgent",
+        "args": {
+          "agent": "executor"
+        },
+        "result": {
+          "resolved": true,
+          "attempts": 1
+        },
+        "correction_trigger": null
+      },
+      {
+        "thought": "Subtask [F5]: coder assignment",
+        "tool": "MultiAgent",
+        "args": {
+          "agent": "coder"
+        },
+        "result": {
+          "resolved": false,
+          "attempts": 1
+        },
+        "correction_trigger": null
+      },
+      {
+        "thought": "Subtask [F6]: executor assignment",
+        "tool": "MultiAgent",
+        "args": {
+          "agent": "executor"
+        },
+        "result": {
+          "resolved": true,
+          "attempts": 1
+        },
+        "correction_trigger": null
+      }
+    ]
+  }
+}

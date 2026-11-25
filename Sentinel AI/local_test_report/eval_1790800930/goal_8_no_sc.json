@@ -1,0 +1,13 @@
+{
+  "goal_id": "goal_8",
+  "spec": "Write a Python script 'retry_fetch.py' that uses the FlakyNetTool to fetch data with exponential backoff retry logic (1s, 2s, 4s, up to 3 retries). Print whether the fetch succeeded or failed. Run the script.",
+  "self_correction_enabled": false,
+  "success": false,
+  "steps": 0,
+  "self_corrections": 0,
+  "elapsed_seconds": 0,
+  "memory_dump": {
+    "final_output": "Agent crashed: RuntimeError: All providers in tier 'coding' exhausted. Chain of failures: groq failed: Error code: 429 - {'error': {'message': 'Rate limit reached for model `qwen/qwen3.8-27b` in organization `org_01kvysb4bwemfv98v689vckj3k` service tier `on_demand` on tokens per day (TPD): Limit 200000, Used 198973, Requested 1559. Please try again in 3m49.824s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing', 'type': 'tokens', 'code': 'rate_limit_exceeded'}} | sambanova (Meta-Llama-3.3-70B-Instruct) timed out after 60s | cerebras (default-model) timed out after 60s | cohere (command-r-08-2024) timed out after 60s | openrouter (openrouter/auto) timed out after 60s | nvidia_nim (meta/codellama-70b) timed out after 60s",
+    "steps": []
+  }
+}

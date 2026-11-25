@@ -1,0 +1,13 @@
+{
+  "goal_id": "goal_4",
+  "spec": "Write a Python script 'buggy_fib.py' that contains a deliberately broken recursive Fibonacci function. Run it to observe the wrong output. Then fix the bug so it returns the correct 10th Fibonacci number (55) and run it again to confirm.",
+  "self_correction_enabled": true,
+  "success": false,
+  "steps": 0,
+  "self_corrections": 0,
+  "elapsed_seconds": 0,
+  "memory_dump": {
+    "final_output": "Agent crashed: RuntimeError: All providers in tier 'strategic' exhausted. Chain of failures: groq (openai/gpt-oss-20b) timed out after 30s | opencode (qwen3.5-plus) timed out after 30s | cohere failed: 429 Client Error: Too Many Requests for url: https://api.cohere.com/v1/chat | cerebras failed: Error code: 401 - {'message': 'Wrong API Key', 'type': 'invalid_request_error', 'param': 'api_key', 'code': 'wrong_api_key'} | sambanova (Meta-Llama-3.3-70B-Instruct) timed out after 30s | openrouter (nvidia/nemotron-3-super-120b-a12b:free) timed out after 30s | nvidia_nim (meta/codellama-70b) timed out after 30s",
+    "steps": []
+  }
+}

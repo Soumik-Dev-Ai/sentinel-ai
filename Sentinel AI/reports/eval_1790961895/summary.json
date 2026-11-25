@@ -1,0 +1,35 @@
+{
+  "run_name": "eval_1790961895",
+  "timestamp": 1790961895,
+  "total_goals": 1,
+  "metrics_with_self_correction": {
+    "completion_rate": 1.0,
+    "avg_steps": 6.0,
+    "total_self_corrections": 2,
+    "avg_elapsed": 122.24559998512268
+  },
+  "metrics_baseline": {
+    "completion_rate": 0.0,
+    "avg_steps": 6.0,
+    "total_self_corrections": 0,
+    "avg_elapsed": 193.70478677749634
+  },
+  "runs": [
+    {
+      "goal_id": "p6_ping",
+      "self_correction_enabled": false,
+      "success": false,
+      "steps": 6,
+      "self_corrections": 0,
+      "elapsed_seconds": 193.7
+    },
+    {
+      "goal_id": "p6_ping",
+      "self_correction_enabled": true,
+      "success": true,
+      "steps": 6,
+      "self_corrections": 2,
+      "elapsed_seconds": 122.25
+    }
+  ]
+}

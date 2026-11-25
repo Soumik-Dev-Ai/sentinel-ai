@@ -1,0 +1,62 @@
+{
+  "goal_id": "goal_11",
+  "spec": "Write a Python script 'broken_import.py' that crashes with ImportError. Run it, observe the crash, fix it with a graceful fallback, and run again to confirm.",
+  "self_correction_enabled": true,
+  "success": true,
+  "steps": 4,
+  "self_corrections": 4,
+  "elapsed_seconds": 133.67382764816284,
+  "memory_dump": {
+    "final_output": "Sentinel AI 2.0 \u2014 Multi-Agent Run Report\n============================================================\nGoal: Write a Python script 'broken_import.py' that crashes with ImportError. Run it, observe the crash, fix it with a graceful fallback, and run again to confirm.\nChosen plan: P1 (confidence=0.95)\n\nSubtasks:\n  [FAIL] S1 (coder) attempts=3:\n  [FAIL] S2 (executor) attempts=1:\n        file: broken_import.py\n        stderr preview: Traceback (most recent call last):\n  File \"C:\\Users\\user\\AppData\\Local\\Temp\\eval_ws_goal_11_0funf7vm\\broken_import.py\", \n  [OK]   S3 (coder) attempts=3:\n        file: broken_import.py\n        stdout preview: Warning: 'nonexistent_module' not found \u2013 using fallback implementation.\nResult from useful_func: Fallback result\n\n  [OK]   S4 (executor) attempts=1:\n        file: broken_import.py\n        stdout preview: Warning: 'nonexistent_module' not found \u2013 using fallback implementation.\nResult from useful_func: Fallback result\n\n\nGenerated Code:\n------------------------------------------------------------\n\n#### broken_import.py\n```python\n\"\"\"broken_import.py\n\nAttempt to import a fake module; on ImportError provide a graceful fallback.\n\"\"\"\n\ntry:\n    # Try to import a module that does not exist\n    import nonexistent_module  # type: ignore\n    # If import succeeds, use its function (this block will not run)\n    def useful_func() -> str:\n        \"\"\"Delegate to the real module's function.\"\"\"\n        return nonexistent_module.helpful()  # pragma: no cover\nexcept ImportError:\n    # Fallback when the module cannot be found\n    print(\"Warning: 'nonexistent_module' not found \u2013 using fallback implementation.\")\n    def useful_func() -> str:\n        \"\"\"Fallback function that returns a placeholder string.\"\"\"\n        return \"Fallback result\"\n\n\nif __name__ == \"__main__\":\n    # Demonstrate the function works regardless of import success\n    result = useful_func()\n    print(f\"Result from useful_func: {result}\")\n\n```",
+    "steps": [
+      {
+        "thought": "Subtask [S1]: coder assignment",
+        "tool": "MultiAgent",
+        "args": {
+          "agent": "coder"
+        },
+        "result": {
+          "resolved": false,
+          "attempts": 3
+        },
+        "correction_trigger": null
+      },
+      {
+        "thought": "Subtask [S2]: executor assignment",
+        "tool": "MultiAgent",
+        "args": {
+          "agent": "executor"
+        },
+        "result": {
+          "resolved": false,
+          "attempts": 1
+        },
+        "correction_trigger": null
+      },
+      {
+        "thought": "Subtask [S3]: coder assignment",
+        "tool": "MultiAgent",
+        "args": {
+          "agent": "coder"
+        },
+        "result": {
+          "resolved": true,
+          "attempts": 3
+        },
+        "correction_trigger": null
+      },
+      {
+        "thought": "Subtask [S4]: executor assignment",
+        "tool": "MultiAgent",
+        "args": {
+          "agent": "executor"
+        },
+        "result": {
+          "resolved": true,
+          "attempts": 1
+        },
+        "correction_trigger": null
+      }
+    ]
+  }
+}

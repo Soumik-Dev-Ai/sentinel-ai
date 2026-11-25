@@ -1,0 +1,13 @@
+{
+  "goal_id": "goal_11",
+  "spec": "Write a Python script 'broken_import.py' that crashes with ImportError. Run it, observe the crash, fix it with a graceful fallback, and run again to confirm.",
+  "self_correction_enabled": false,
+  "success": false,
+  "steps": 0,
+  "self_corrections": 0,
+  "elapsed_seconds": 0,
+  "memory_dump": {
+    "final_output": "Agent crashed: NameError: name 'config' is not defined",
+    "steps": []
+  }
+}
