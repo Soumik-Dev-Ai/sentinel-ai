@@ -10,6 +10,7 @@ runs `pytest` via `RunTestsTool`.
 from __future__ import annotations
 
 import re
+from pathlib import Path
 from typing import Any, Optional
 
 from backend.orchestrator.base import Agent, AgentContext, fail, ok
@@ -22,6 +23,10 @@ class Executor(Agent):
     # ---- traceback parsing ----
     TRACEBACK_ERROR_RE = re.compile(
         r"^\s*(?P<file>.+?)[:\s]+line\s+(?P<line>\d+)\s*[:\s]*(?P<reason>.+)$"
+    )
+    GCC_ERROR_RE = re.compile(
+        r"(?P<file>[^:\s\n]+):(?P<line>\d+):(?:\d+:)?\s*(?:fatal\s+)?error:\s*(?P<msg>.+)",
+        re.IGNORECASE,
     )
     EXCEPTION_RE = re.compile(
         r"^(?P<exc>[A-Z]\w*(?:Error|Exception|Warning)[: ]*)",
@@ -51,16 +56,17 @@ class Executor(Agent):
             parent=kw.get("parent_node"),
         )
 
-        if test_mode:
+        from backend.tools.polyglot_sandbox import PolyglotSandboxTool, EXT_MAP
+        detected_lang = kw.get("language") or EXT_MAP.get(Path(filename).suffix.lower(), "python")
+
+        if test_mode and detected_lang == "python":
             from backend.tools.test_run import RunTestsTool
 
             tool = RunTestsTool(workspace=ctx.workspace)
             args: dict[str, Any] = {"path": kw.get("test_path") or "tests/", "timeout": 30}
         else:
-            from backend.tools.code_exec import RunPythonTool
-
-            tool = RunPythonTool(workspace=ctx.workspace)
-            args = {"path": filename, "timeout": 30}
+            tool = PolyglotSandboxTool(workspace=ctx.workspace)
+            args = {"path": filename, "language": detected_lang, "timeout": 30}
 
         # --- Safety guardrails ---
         from backend.safety.guardrails import scan as safety_scan
@@ -113,7 +119,7 @@ class Executor(Agent):
             self.update_graph_node(ctx, node_id, status="error")
             return fail("unexpected_result_shape", raw=raw)
 
-        ok_exec = exit_code == 0 and (test_mode or not stderr.strip())
+        ok_exec = exit_code == 0 and (test_mode or not stderr.strip() or ("Traceback" not in stderr and "Error:" not in stderr and "FAILED" not in stderr))
         parsed = self._parse_traceback(stderr) if stderr.strip() else None
 
         ctx.bus.emit(
@@ -182,38 +188,61 @@ class Executor(Agent):
         # Locate the error class.
         match_exc = list(self.EXCEPTION_RE.finditer(stderr))
         exception = match_exc[-1].group("exc").strip().rstrip(":") if match_exc else ""
+        line: Optional[int] = None
 
-        # Determine category from exception name.
-        kind = "unknown"
-        demands = "none"
-        if exception:
-            if exception.endswith("SyntaxError"):
-                kind = "syntax"
-                demands = "line_patch"
-            elif exception in {
-                "TimeoutError", "ConnectionError", "ConnectionRefusedError",
-                "OSError", "IOError", "FileNotFoundError",
-            } or exception.lower().endswith("timeouterror"):
-                kind = "external"
-                demands = "backoff"
-            elif exception in {"AssertionError", "ValueError", "TypeError",
-                               "IndexError", "KeyError", "ZeroDivisionError", "AttributeError"}:
-                kind = "logic"
-                demands = "full_rewrite"
-            elif "Error" in exception or "Exception" in exception:
-                kind = "logic"
-                demands = "full_rewrite"
+        # Check for low-level signals & compiler errors
+        lowered = stderr.lower()
+        if any(sig in lowered for sig in ("segmentation fault", "sigsegv", "0xc0000005")):
+            kind = "logic"
+            exception = "SegmentationFault"
+            demands = "full_rewrite"
+        elif any(sig in lowered for sig in ("sigabrt", "assertion failed", "assertion error")):
+            kind = "logic"
+            exception = "AssertionError"
+            demands = "full_rewrite"
+        elif not exception and self.GCC_ERROR_RE.search(stderr):
+            gcc_m = self.GCC_ERROR_RE.search(stderr)
+            kind = "syntax"
+            exception = "CompileError"
+            demands = "line_patch"
+            line = None
+            if gcc_m:
+                try:
+                    line = int(gcc_m.group("line"))
+                except Exception:
+                    pass
+        else:
+            # Determine category from exception name.
+            kind = "unknown"
+            demands = "none"
+            if exception:
+                if exception.endswith("SyntaxError"):
+                    kind = "syntax"
+                    demands = "line_patch"
+                elif exception in {
+                    "TimeoutError", "ConnectionError", "ConnectionRefusedError",
+                    "OSError", "IOError", "FileNotFoundError",
+                } or exception.lower().endswith("timeouterror"):
+                    kind = "external"
+                    demands = "backoff"
+                elif exception in {"AssertionError", "ValueError", "TypeError",
+                                   "IndexError", "KeyError", "ZeroDivisionError", "AttributeError"}:
+                    kind = "logic"
+                    demands = "full_rewrite"
+                elif "Error" in exception or "Exception" in exception:
+                    kind = "logic"
+                    demands = "full_rewrite"
 
-        # Parse file/line.
-        file_line_search = None
-        line = None
-        for m in self.TRACEBACK_ERROR_RE.finditer(stderr):
-            file_line_search = m
-        if file_line_search:
-            try:
-                line = int(file_line_search.group("line"))
-            except Exception:
-                line = None
+        # Parse file/line if not already found from compiler.
+        if line is None:
+            file_line_search = None
+            for m in self.TRACEBACK_ERROR_RE.finditer(stderr):
+                file_line_search = m
+            if file_line_search:
+                try:
+                    line = int(file_line_search.group("line"))
+                except Exception:
+                    line = None
 
         # Detect generic syntax-error block style for older python.
         if kind == "syntax" and line is None:

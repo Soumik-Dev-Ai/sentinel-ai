@@ -19,13 +19,9 @@ from typing import Any
 from backend.orchestrator.base import Agent, AgentContext, fail, ok
 
 
-ORCH_SYSTEM_PROMPT = """You are ORCHESTRATOR, the strategic planner of a multi-agent system that writes Python code.
+ORCH_SYSTEM_PROMPT = """You are ORCHESTRATOR, the strategic planner of Sentinel AI 2.0.
 
-Your job: for any user goal, generate 3 distinct *approach paths* and score each.
-
-You receive:
-- A user goal.
-- (Optional) acceptance criteria.
+For any user goal, generate 3 distinct, concise approach paths.
 
 You MUST respond with ONLY a JSON object of this shape (no prose before/after):
 
@@ -34,24 +30,35 @@ You MUST respond with ONLY a JSON object of this shape (no prose before/after):
     {
       "id": "P1",
       "description": "short description of the approach",
-      "steps": ["subtask 1 desc", "subtask 2 desc", "..."],
-      "confidence": 0.85,           // 0..1, your belief it will succeed
+      "steps": ["implement code", "run and verify tests"],
+      "confidence": 0.90,
       "rationale": "one-line rationale",
-      "risks": ["risk 1", "..."]
+      "risks": []
     },
-    // ... 3 paths total
+    {
+      "id": "P2",
+      "description": "alternate approach",
+      "steps": ["implement code", "run and verify tests"],
+      "confidence": 0.80,
+      "rationale": "one-line rationale",
+      "risks": []
+    },
+    {
+      "id": "P3",
+      "description": "third approach",
+      "steps": ["implement code", "run and verify tests"],
+      "confidence": 0.70,
+      "rationale": "one-line rationale",
+      "risks": []
+    }
   ]
 }
 
-Scoring rules:
-- Prefer simple, correct, observable solutions over clever ones.
-- Steps must be specific executable subtasks like "write fib.py to compute nth Fibonacci iteratively".
-- Confidence reflects: code correctness probability * ease of verification * approach match to goal.
-- Reduce confidence for: requires external network calls (less reliable), needs large library dependencies, has unclear acceptance.
-
-Always output exactly 3 paths, ordered by your predicted confidence (highest first).
+Rules:
+- Keep descriptions and steps brief (1-2 sentences each) to conserve tokens.
+- Confidence reflects predicted probability of success (0.0 to 1.0).
+- Order by confidence descending.
 """
-
 
 EXEC_PLAN_PROMPT = """Given the chosen approach below, expand it into a precise ordered list of subtasks for the team.
 
@@ -71,11 +78,11 @@ Rules:
 - IDs must be S1, S2, S3, ... in execution order.
 - `agent` must be one of: coder, executor, critic.
 - `model_tier` MUST be selected based on complexity:
-   * `strategic` - High intelligence needed (complex reasoning, planning)
+   * `strategic` - High intelligence needed (system architecture, distributed systems, high ambiguity)
    * `coding` - Deep code generation or logic refactoring
-   * `fast_eval` - Simple tasks, traceback parsing, unit tests, fast feedback
-- The Coder writes/edits files. The Executor runs code/tests. The Critic reviews code BEFORE execution.
-- Always include at least one executor subtask after each coder subtask so we exercise the code.
+   * `fast_eval` - Simple algorithmic tasks (e.g. binary search, sorting, factorial, basic utilities, test runners). Always use `fast_eval` for standard algorithms to conserve tokens and reduce latency.
+- Every `coder` subtask is automatically reviewed by Critic and executed by Executor in parallel — do NOT emit separate `critic` or `executor` subtasks.
+- Keep the plan minimal (1 `coder` subtask for a single script/algorithm; 2–3 max only for distinct modules). Never split a single file across multiple subtasks.
 """
 
 
@@ -115,9 +122,21 @@ class Orchestrator(Agent):
         )
         paths = self._parse_paths(paths_reply.thought or "")
         if not paths:
-            ctx.bus.emit("error", message="Orchestrator produced no paths")
-            self.update_graph_node(ctx, root_id, status="error")
-            return fail("no_paths_produced")
+            # Resilient fallback: synthesize direct execution plan instead of crashing
+            ctx.bus.emit("terminal_line", text="[ORCH] Notice: Synthesizing direct execution plan from goal", line_type="info")
+            paths = [
+                {
+                    "id": "P1",
+                    "description": f"Direct implementation: {ctx.goal[:60]}",
+                    "steps": [
+                        f"Implement solution: {ctx.goal}",
+                        f"Run and verify tests for: {ctx.goal}",
+                    ],
+                    "confidence": 0.90,
+                    "rationale": "Direct execution plan",
+                    "risks": [],
+                }
+            ]
 
         # Show all 3 candidates as graph children.
         for i, p in enumerate(paths):
@@ -203,37 +222,76 @@ class Orchestrator(Agent):
     # ---------- parsing helpers ----------
 
     def _parse_paths(self, text: str) -> list[dict[str, Any]]:
-        # First try direct JSON parse.
+        cleaned = self._strip_codefence(text)
+        # 1. Direct JSON parse
         try:
-            data = json.loads(self._strip_codefence(text))
-            if isinstance(data, dict) and isinstance(data.get("paths"), list):
-                return [p for p in data["paths"] if isinstance(p, dict)]
+            data = json.loads(cleaned)
+            if isinstance(data, dict):
+                for k in ("paths", "approaches", "options", "plans"):
+                    if isinstance(data.get(k), list) and data[k]:
+                        return [p for p in data[k] if isinstance(p, dict)]
+            elif isinstance(data, list) and data:
+                return [p for p in data if isinstance(p, dict)]
         except Exception:
             pass
-        # Then regex-extract a { ... } block.
+
+        # 2. Greedy regex block
         m = re.search(r"\{.*\}", text, re.DOTALL)
         if m:
             try:
                 data = json.loads(m.group(0))
-                if isinstance(data, dict) and isinstance(data.get("paths"), list):
-                    return list(data["paths"])
+                if isinstance(data, dict):
+                    for k in ("paths", "approaches", "options", "plans"):
+                        if isinstance(data.get(k), list) and data[k]:
+                            return [p for p in data[k] if isinstance(p, dict)]
+                elif isinstance(data, list) and data:
+                    return [p for p in data if isinstance(p, dict)]
             except Exception:
                 pass
+
+        # 3. Individual path object regex extraction (robust to truncated JSON)
+        path_objs = []
+        for obj_m in re.finditer(r'\{[^{}]*"id"\s*:\s*"(?P<id>P\d+)"[^{}]*"steps"\s*:\s*\[(?P<steps>[^\]]*)\][^{}]*\}', text, re.DOTALL):
+            try:
+                p_id = obj_m.group("id")
+                raw_steps = obj_m.group("steps")
+                steps = [s.strip().strip('"').strip("'") for s in raw_steps.split(",") if s.strip()]
+                path_objs.append({
+                    "id": p_id,
+                    "description": f"Approach {p_id}",
+                    "steps": steps or ["implement solution", "run tests"],
+                    "confidence": 0.85,
+                })
+            except Exception:
+                pass
+        if path_objs:
+            return path_objs
+
         return []
 
     def _parse_subtasks(self, text: str) -> list[dict[str, Any]]:
+        cleaned = self._strip_codefence(text)
         try:
-            data = json.loads(self._strip_codefence(text))
-            if isinstance(data, dict) and isinstance(data.get("subtasks"), list):
-                return list(data["subtasks"])
+            data = json.loads(cleaned)
+            if isinstance(data, dict):
+                for k in ("subtasks", "tasks", "steps"):
+                    if isinstance(data.get(k), list) and data[k]:
+                        return list(data[k])
+            elif isinstance(data, list) and data:
+                return list(data)
         except Exception:
             pass
+
         m = re.search(r"\{.*\}", text, re.DOTALL)
         if m:
             try:
                 data = json.loads(m.group(0))
-                if isinstance(data, dict) and isinstance(data.get("subtasks"), list):
-                    return list(data["subtasks"])
+                if isinstance(data, dict):
+                    for k in ("subtasks", "tasks", "steps"):
+                        if isinstance(data.get(k), list) and data[k]:
+                            return list(data[k])
+                elif isinstance(data, list) and data:
+                    return list(data)
             except Exception:
                 pass
         return []

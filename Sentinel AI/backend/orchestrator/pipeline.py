@@ -131,13 +131,19 @@ class MultiAgentPipeline:
     def run(
         self,
         goal: str,
-        acceptance: list[str],
-        workspace: Path,
+        acceptance: Optional[list[str]] = None,
+        workspace: Optional[Path] = None,
         input_text: Optional[str] = None,
         run_id: Optional[str] = None,
     ) -> dict[str, Any]:
-        """Main entry point — blocks until pipeline is done."""
+        """Main entry point -- blocks until pipeline is done."""
         run_id = run_id or uuid.uuid4().hex[:12]
+        if acceptance is None:
+            acceptance = []
+        if workspace is None:
+            import tempfile
+            workspace = Path(tempfile.mkdtemp(prefix="agent_ws_"))
+        workspace.mkdir(parents=True, exist_ok=True)
         ctx = AgentContext(
             goal=goal,
             acceptance=acceptance,
@@ -273,11 +279,13 @@ class MultiAgentPipeline:
         )
 
         generated_code: dict[str, str] = {}
-        for pyf in sorted(Path(workspace).glob("*.py")):
-            try:
-                generated_code[pyf.name] = pyf.read_text(encoding="utf-8")
-            except Exception:
-                pass
+        polyglot_exts = {".py", ".go", ".rs", ".c", ".cpp", ".cc", ".cxx", ".h", ".hpp", ".js", ".mjs", ".ts", ".sh", ".json", ".sql"}
+        for f in sorted(Path(workspace).iterdir()):
+            if f.is_file() and f.suffix.lower() in polyglot_exts:
+                try:
+                    generated_code[f.name] = f.read_text(encoding="utf-8")
+                except Exception:
+                    pass
 
         ctx.bus.emit("telemetry_update", **self.cost.snapshot())
         metrics = self._summary_metrics(ctx, elapsed)
@@ -429,7 +437,7 @@ class MultiAgentPipeline:
                 coder_outcome = self.coder.run(
                     ctx,
                     subtask_desc=subtask_desc,
-                    filename_hint=subtask.get("filename") or "main.py",
+                    filename_hint=subtask.get("filename") or self._infer_filename_hint(subtask_desc, goal),
                     prior_failures=prior_failures,
                     parent_node=subtask_id,
                     node_id=coder_node,
@@ -750,25 +758,29 @@ class MultiAgentPipeline:
                 if outcome.get("stderr"):
                     lines.append(f"        stderr preview: {str(outcome['stderr'])[:120]}")
         # attach generated code from disk
+        polyglot_exts = {".py", ".go", ".rs", ".c", ".cpp", ".cc", ".cxx", ".h", ".hpp", ".js", ".mjs", ".ts", ".sh", ".json", ".sql"}
         if workspace:
-            py_files = sorted(Path(workspace).glob("*.py"))
-            if py_files:
+            source_files = sorted(p for p in Path(workspace).iterdir() if p.is_file() and p.suffix.lower() in polyglot_exts)
+            if source_files:
                 lines.append("")
                 lines.append("Generated Code:")
                 lines.append("-" * 60)
-                for pyf in py_files:
+                for sf in source_files:
                     try:
-                        code = pyf.read_text(encoding="utf-8")
-                        lines.append(f"\n#### {pyf.name}\n```python\n{code}\n```")
+                        code = sf.read_text(encoding="utf-8")
+                        lang = sf.suffix.lstrip(".").lower()
+                        lang_tag = {"py": "python", "rs": "rust", "js": "javascript", "ts": "typescript"}.get(lang, lang)
+                        lines.append(f"\n#### {sf.name}\n```{lang_tag}\n{code}\n```")
                     except Exception:
                         pass
         return "\n".join(lines)
 
     @staticmethod
     def _latest_file_in_workspace(workspace: Path) -> Optional[str]:
+        polyglot_exts = {".py", ".go", ".rs", ".c", ".cpp", ".cc", ".cxx", ".h", ".hpp", ".js", ".mjs", ".ts", ".sh", ".json", ".sql"}
         try:
             files = sorted(
-                (p for p in Path(workspace).rglob("*.py") if p.is_file()),
+                (p for p in Path(workspace).rglob("*") if p.is_file() and p.suffix.lower() in polyglot_exts),
                 key=lambda p: p.stat().st_mtime,
                 reverse=True,
             )
@@ -777,6 +789,21 @@ class MultiAgentPipeline:
             return str(files[0].relative_to(workspace))
         except Exception:
             return None
+
+    @staticmethod
+    def _infer_filename_hint(subtask_desc: str, goal: str) -> str:
+        combined = f"{subtask_desc} {goal}".lower()
+        if any(k in combined for k in ("golang", " in go ", " go program", " go script", " go function", ".go")):
+            return "main.go"
+        if any(k in combined for k in ("rust", " in rust", " rust program", " cargo", ".rs")):
+            return "main.rs"
+        if any(k in combined for k in ("c++", "cpp", "cxx", ".cpp")):
+            return "main.cpp"
+        if any(k in combined for k in (" in c ", " c program", " c script", "gcc", ".c")):
+            return "main.c"
+        if any(k in combined for k in ("javascript", "node.js", "nodejs", " in js", ".js")):
+            return "main.js"
+        return "main.py"
 
     def retry_router_classify(self, exec_outcome: dict[str, Any]) -> Failure:
         """Bridge from executor envelope -> Failure struct used by RetryRouter."""

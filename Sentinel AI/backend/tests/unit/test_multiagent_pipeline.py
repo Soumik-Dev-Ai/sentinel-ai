@@ -67,15 +67,8 @@ class _ScriptedProvider(Provider):
 
 def _router_with(replies):
     """Create a router pre-seeded with a mock provider that returns the given replies in order."""
-    router = LLMRouter()
-    # Inject mock provider into the strategic tier so it's the only one consulted.
-    router._tier_providers["strategic"] = [{
-        "provider": _ScriptedProvider(replies),
-        "is_preferred": True,
-        "is_free": True,
-        "usage_count": 0,
-    }]
-    return router
+    mock = _ScriptedProvider(replies)
+    return LLMRouter(providers=[mock])
 
 
 # -----------------------------------------------------------------------------
