@@ -8,6 +8,7 @@ from typing import Any
 
 from backend.ai_agent.runner import AgentRunner
 from backend.ai_agent.working_memory import Goal
+from backend import config
 from backend.llm.router import LLMRouter
 from backend.tools.code_exec import RunPythonTool
 from backend.tools.file_io import ReadFileTool, WriteFileTool
@@ -85,6 +86,7 @@ def run_evaluation_suite(report_dir: Path | str, on_progress: Any = None, custom
     
     total_runs = len(goals_to_run) * 2
     completed_runs = [0]
+    shared_router = LLMRouter(provider_timeout=getattr(config, "PROVIDER_TIMEOUT_SECONDS", 90))
     
     def run_single_eval(goal_data: dict[str, Any], self_correction_enabled: bool) -> dict[str, Any]:
         workspace = Path(mkdtemp(prefix=f"eval_ws_{goal_data['id']}_"))
@@ -97,7 +99,7 @@ def run_evaluation_suite(report_dir: Path | str, on_progress: Any = None, custom
             from backend.orchestrator.escalation import EscalationManager
 
             pipeline = MultiAgentPipeline(
-                router=LLMRouter(provider_timeout=getattr(config, "PROVIDER_TIMEOUT_SECONDS", 90)),
+                router=shared_router,
                 escalation=EscalationManager(timeout_seconds=10),
                 config={
                     "max_retries_per_subtask": 3 if self_correction_enabled else 1,
@@ -161,7 +163,7 @@ def run_evaluation_suite(report_dir: Path | str, on_progress: Any = None, custom
         # Save individual trace
         mode_str = "with_sc" if self_correction_enabled else "no_sc"
         trace_path = run_dir / f"{goal_data['id']}_{mode_str}.json"
-        trace_path.write_text(json.dumps(run_result, indent=2))
+        trace_path.write_text(json.dumps(run_result, indent=2), encoding="utf-8")
         
         return run_result
 
@@ -214,5 +216,5 @@ def run_evaluation_suite(report_dir: Path | str, on_progress: Any = None, custom
         ]
     }
     
-    (run_dir / "summary.json").write_text(json.dumps(summary, indent=2))
+    (run_dir / "summary.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
     return summary

@@ -1,0 +1,128 @@
+[
+  {
+    "id": "py_01_avl_tree",
+    "language": "python",
+    "category": "algorithms",
+    "spec": "Write a Python script 'avl_tree.py' that implements a self-balancing AVL Tree supporting insert, delete, search, and in-order traversal. Include a comprehensive pytest suite in the same file or 'test_avl.py' asserting that tree heights maintain AVL invariants after 20 random insertions. Run the tests to verify exit code 0.",
+    "input": ""
+  },
+  {
+    "id": "py_02_async_rate_limiter",
+    "language": "python",
+    "category": "concurrency",
+    "spec": "Write a Python script 'rate_limiter.py' that implements an asyncio Token Bucket rate limiter (capacity=5, refill_rate=2 tokens/sec). Spawn 10 concurrent async tasks attempting to acquire tokens and verify that total elapsed time matches expected throttling bounds. Print 'RATE LIMITER PASSED'. Run the script.",
+    "input": ""
+  },
+  {
+    "id": "py_03_buggy_lru_self_correct",
+    "language": "python",
+    "category": "self_correction",
+    "spec": "Write a Python script 'lru_cache.py' implementing an LRU cache of capacity 3. Intentionally introduce an eviction bug (e.g. evicting the most recently used instead of least). Run it with assertions, observe the AssertionError, diagnose the traceback, fix the eviction ordering, and re-run to confirm all assertions pass.",
+    "input": ""
+  },
+  {
+    "id": "c_01_dynamic_vector",
+    "language": "c",
+    "category": "systems_memory",
+    "spec": "Write a C program 'vector.c' implementing a dynamic integer array with vector_init, vector_push, vector_get, vector_pop, and vector_free. Ensure proper memory reallocation (doubling capacity). In main(), push 100 elements, verify values, pop 50 elements, free all allocated memory, and print 'C VECTOR PASSED'. Compile with GCC and run.",
+    "input": ""
+  },
+  {
+    "id": "c_02_merge_sort_pointers",
+    "language": "c",
+    "category": "algorithms",
+    "spec": "Write a C program 'merge_sort.c' implementing merge sort using raw pointer arithmetic. Generate an array of 50 integers in reverse order, sort it, assert every element is in ascending order with assert(), and print 'C MERGE SORT PASSED'. Compile with GCC and run.",
+    "input": ""
+  },
+  {
+    "id": "c_03_segfault_recovery",
+    "language": "c",
+    "category": "self_correction",
+    "spec": "Write a C program 'linked_list.c' that implements a singly linked list. Include a deliberate null-pointer dereference in the search function that triggers a SIGSEGV when searching an empty list. Observe the crash output, fix the null check guard, recompile with GCC, and run to verify it prints 'C LINKED LIST FIXED'.",
+    "input": ""
+  },
+  {
+    "id": "cpp_01_thread_pool",
+    "language": "cpp",
+    "category": "concurrency",
+    "spec": "Write a C++20 program 'thread_pool.cpp' that implements a minimal thread pool with 4 worker threads, a thread-safe task queue using std::mutex and std::condition_variable, and a submit() method returning std::future. Submit 16 arithmetic tasks, sum the results, assert the total equals expected sum, and print 'CPP THREAD POOL PASSED'. Compile with G++ -std=c++20 and run.",
+    "input": ""
+  },
+  {
+    "id": "cpp_02_string_view_parser",
+    "language": "cpp",
+    "category": "systems",
+    "spec": "Write a C++ program 'csv_parser.cpp' that parses a comma-separated string of numbers without dynamic heap string allocations using std::string_view. Calculate sum, min, and max. Assert values against expected results and print 'CPP PARSER PASSED'. Compile with G++ and run.",
+    "input": ""
+  },
+  {
+    "id": "cpp_03_off_by_one_recovery",
+    "language": "cpp",
+    "category": "self_correction",
+    "spec": "Write a C++ program 'binary_search.cpp' implementing binary search on std::vector<int>. Intentionally set the high index to arr.size() instead of arr.size() - 1 and while (low < high) causing an out-of-bounds or missed element on single-element search. Run it, observe the failed assertion, fix the boundary conditions, and re-run to confirm 'CPP BINARY SEARCH FIXED'.",
+    "input": ""
+  },
+  {
+    "id": "rs_01_thread_safe_queue",
+    "language": "rust",
+    "category": "concurrency",
+    "spec": "Write a Rust program 'main.rs' implementing a concurrent bounded queue using Arc, Mutex, and Condvar. Spawn 2 producer threads pushing 10 items each and 1 consumer thread draining items. Assert all 20 items are consumed in order and print 'RUST QUEUE PASSED'. Compile with rustc and run.",
+    "input": ""
+  },
+  {
+    "id": "rs_02_expression_evaluator",
+    "language": "rust",
+    "category": "algorithms",
+    "spec": "Write a Rust program 'main.rs' that tokenizes and evaluates arithmetic expressions containing +, -, *, / and parentheses using an enum Expr AST and Result<f64, String>. Evaluate '((3 + 5) * 2) - (8 / 4)' and assert the result is 14.0. Print 'RUST EVALUATOR PASSED'. Compile with rustc and run.",
+    "input": ""
+  },
+  {
+    "id": "rs_03_borrow_checker_recovery",
+    "language": "rust",
+    "category": "self_correction",
+    "spec": "Write a Rust program 'main.rs' that attempts to mutate elements in a Vec while holding an immutable reference to another element in a loop (deliberate E0502 borrow checker error). Observe the compiler diagnostics from rustc, refactor the code using indices or split_at_mut, recompile, and run to verify 'RUST BORROW CHECK FIXED'.",
+    "input": ""
+  },
+  {
+    "id": "go_01_channel_pipeline",
+    "language": "go",
+    "category": "concurrency",
+    "spec": "Write a Go program 'main.go' implementing a 3-stage channel pipeline: generator -> square numbers -> filter evens. Use goroutines and sync.WaitGroup. In main(), collect the first 10 matching results, assert they match [4, 16, 36, 64, 100, 144, 196, 256, 324, 400], and print 'GO PIPELINE PASSED'. Compile with go build and run.",
+    "input": ""
+  },
+  {
+    "id": "go_02_concurrent_kv_store",
+    "language": "go",
+    "category": "systems",
+    "spec": "Write a Go program 'main.go' implementing an in-memory Key-Value store using sync.RWMutex with Set, Get, and Delete methods. Spawn 20 goroutines reading and writing concurrently without race conditions. Verify all writes are intact and print 'GO KV STORE PASSED'. Compile with go build and run.",
+    "input": ""
+  },
+  {
+    "id": "go_03_deadlock_recovery",
+    "language": "go",
+    "category": "self_correction",
+    "spec": "Write a Go program 'main.go' that introduces a channel deadlock by sending to an unbuffered channel without an active receiver in a separate goroutine, causing a fatal error 'all goroutines are asleep - deadlock!'. Observe the crash output, fix the channel buffering or spawn order, recompile, and verify it prints 'GO DEADLOCK FIXED'.",
+    "input": ""
+  },
+  {
+    "id": "js_01_event_emitter",
+    "language": "javascript",
+    "category": "async_systems",
+    "spec": "Write a Node.js script 'emitter.js' implementing a custom EventEmitter class with 'on', 'once', 'emit', and 'off'. Include support for wildcards ('*') and arguments forwarding. Add assertions using the built-in 'assert' module verifying listener execution counts. Print 'NODE EMITTER PASSED'. Run with node.",
+    "input": ""
+  },
+  {
+    "id": "js_02_stream_processor",
+    "language": "javascript",
+    "category": "data_processing",
+    "spec": "Write a Node.js script 'stream_calc.js' that reads 'input.txt' containing comma-separated numbers, streams the lines, computes min, max, average, and standard deviation, and writes the JSON report to 'output.json'. Verify output values with assert. Print 'NODE STREAM PASSED'. Run with node.",
+    "input": "12, 45, 67, 89, 23\n34, 56, 78, 90, 11\n99, 88, 77, 66, 55"
+  },
+  {
+    "id": "js_03_unhandled_rejection_recovery",
+    "language": "javascript",
+    "category": "self_correction",
+    "spec": "Write a Node.js script 'async_fetch.js' that executes chained Promises with an unhandled rejection that throws an unhandled error and exits with code 1. Run it, capture the runtime rejection error, wrap the asynchronous pipeline in proper try/catch and Promise.allSettled error boundaries, and re-run to confirm 'NODE ASYNC FIXED' with exit code 0.",
+    "input": ""
+  }
+]
