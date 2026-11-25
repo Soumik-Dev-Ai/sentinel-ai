@@ -1,0 +1,397 @@
+{
+  "goal_id": "goal_6",
+  "spec": "Write a Python script 'fetch_todo.py' that uses the 'urllib.request' module to fetch JSON data from 'https://jsonplaceholder.typicode.com/todos/1', extract the 'title', and write it to 'todo.txt'. Run the script to generate the file.",
+  "self_correction_enabled": true,
+  "success": false,
+  "steps": 5,
+  "self_corrections": 4,
+  "elapsed_seconds": 25.707536220550537,
+  "memory_dump": {
+    "run_id": "716e81cf-345",
+    "goal": {
+      "id": "goal_6",
+      "spec": "Write a Python script 'fetch_todo.py' that uses the 'urllib.request' module to fetch JSON data from 'https://jsonplaceholder.typicode.com/todos/1', extract the 'title', and write it to 'todo.txt'. Run the script to generate the file.",
+      "acceptance": []
+    },
+    "plan_current": [
+      {
+        "id": "S1",
+        "desc": "Write a Python script 'fetch_todo.py' that uses the 'urllib.request' module to fetch JSON data from 'https://jsonplaceholder.typicode.com/todos/1', extract the 'title', and write it to 'todo.txt'. Run the script to generate the file.",
+        "status": "unresolvable"
+      }
+    ],
+    "steps": [
+      {
+        "ts": "2026-07-20T18:48:52.166310+00:00",
+        "step_ix": 1,
+        "thought": "I will write a Python script named 'fetch_todo.py' to fetch the JSON data from the provided URL using the 'urllib.request' module. I'll extract the 'title' field from the JSON and then write it to a file named 'todo.txt'.\n\nThe script will follow this structure:\n1. Import required modules.\n2. Define the URL and file path.\n3. Fetch the JSON data from the URL.\n4. Extract the 'title' from the JSON response.\n5. Write the title to 'todo.txt'.",
+        "tool": "write_file",
+        "args": {
+          "files": {
+            "fetch_todo.py": "import urllib.request\n\nurl = \"https://jsonplaceholder.typicode.com/todos/1\"\ntodo_file = \"todo.txt\"\n\n# Fetch JSON data from the URL\nwith urllib.request.urlopen(url) as response:\n    data = response.read()\n    json_data = data.decode('utf-8')\n\n# Extract the 'title' from the JSON\ntodo_title = json.loads(json_data)[\"title\"]\n\n# Write the title to 'todo.txt'\nwith open(todo_file, \"w\") as file:\n    file.write(todo_title)"
+          }
+        },
+        "result": {
+          "ok": false,
+          "error_type": "args_invalid",
+          "tool": "write_file",
+          "details": [
+            {
+              "type": "missing",
+              "loc": [
+                "path"
+              ],
+              "msg": "Field required",
+              "input": {
+                "files": {
+                  "fetch_todo.py": "import urllib.request\n\nurl = \"https://jsonplaceholder.typicode.com/todos/1\"\ntodo_file = \"todo.txt\"\n\n# Fetch JSON data from the URL\nwith urllib.request.urlopen(url) as response:\n    data = response.read()\n    json_data = data.decode('utf-8')\n\n# Extract the 'title' from the JSON\ntodo_title = json.loads(json_data)[\"title\"]\n\n# Write the title to 'todo.txt'\nwith open(todo_file, \"w\") as file:\n    file.write(todo_title)"
+                }
+              },
+              "url": "https://errors.pydantic.dev/2.12/v/missing"
+            },
+            {
+              "type": "missing",
+              "loc": [
+                "content"
+              ],
+              "msg": "Field required",
+              "input": {
+                "files": {
+                  "fetch_todo.py": "import urllib.request\n\nurl = \"https://jsonplaceholder.typicode.com/todos/1\"\ntodo_file = \"todo.txt\"\n\n# Fetch JSON data from the URL\nwith urllib.request.urlopen(url) as response:\n    data = response.read()\n    json_data = data.decode('utf-8')\n\n# Extract the 'title' from the JSON\ntodo_title = json.loads(json_data)[\"title\"]\n\n# Write the title to 'todo.txt'\nwith open(todo_file, \"w\") as file:\n    file.write(todo_title)"
+                }
+              },
+              "url": "https://errors.pydantic.dev/2.12/v/missing"
+            }
+          ]
+        },
+        "eval": {
+          "success": false,
+          "coherence": 0.2,
+          "plan_valid": true,
+          "mode": "F1",
+          "evidence": "Tool write_file failed (args_invalid)",
+          "goal_alignment": 0.2
+        },
+        "correction_trigger": null
+      },
+      {
+        "ts": "2026-07-20T18:48:52.166310+00:00",
+        "step_ix": 2,
+        "thought": "[recovery re-invoke] tool_failure",
+        "tool": "write_file",
+        "args": {
+          "files": {
+            "fetch_todo.py": "import urllib.request\n\nurl = \"https://jsonplaceholder.typicode.com/todos/1\"\ntodo_file = \"todo.txt\"\n\n# Fetch JSON data from the URL\nwith urllib.request.urlopen(url) as response:\n    data = response.read()\n    json_data = data.decode('utf-8')\n\n# Extract the 'title' from the JSON\ntodo_title = json.loads(json_data)[\"title\"]\n\n# Write the title to 'todo.txt'\nwith open(todo_file, \"w\") as file:\n    file.write(todo_title)"
+          },
+          "timeout": 60
+        },
+        "result": {
+          "ok": false,
+          "error_type": "args_invalid",
+          "tool": "write_file",
+          "details": [
+            {
+              "type": "missing",
+              "loc": [
+                "path"
+              ],
+              "msg": "Field required",
+              "input": {
+                "files": {
+                  "fetch_todo.py": "import urllib.request\n\nurl = \"https://jsonplaceholder.typicode.com/todos/1\"\ntodo_file = \"todo.txt\"\n\n# Fetch JSON data from the URL\nwith urllib.request.urlopen(url) as response:\n    data = response.read()\n    json_data = data.decode('utf-8')\n\n# Extract the 'title' from the JSON\ntodo_title = json.loads(json_data)[\"title\"]\n\n# Write the title to 'todo.txt'\nwith open(todo_file, \"w\") as file:\n    file.write(todo_title)"
+                },
+                "timeout": 60
+              },
+              "url": "https://errors.pydantic.dev/2.12/v/missing"
+            },
+            {
+              "type": "missing",
+              "loc": [
+                "content"
+              ],
+              "msg": "Field required",
+              "input": {
+                "files": {
+                  "fetch_todo.py": "import urllib.request\n\nurl = \"https://jsonplaceholder.typicode.com/todos/1\"\ntodo_file = \"todo.txt\"\n\n# Fetch JSON data from the URL\nwith urllib.request.urlopen(url) as response:\n    data = response.read()\n    json_data = data.decode('utf-8')\n\n# Extract the 'title' from the JSON\ntodo_title = json.loads(json_data)[\"title\"]\n\n# Write the title to 'todo.txt'\nwith open(todo_file, \"w\") as file:\n    file.write(todo_title)"
+                },
+                "timeout": 60
+              },
+              "url": "https://errors.pydantic.dev/2.12/v/missing"
+            }
+          ]
+        },
+        "eval": {
+          "success": false,
+          "coherence": 0.2,
+          "plan_valid": true,
+          "mode": "F1",
+          "evidence": "Tool write_file failed (args_invalid)",
+          "goal_alignment": 0.2
+        },
+        "correction_trigger": "F1"
+      },
+      {
+        "ts": "2026-07-20T18:49:00.001892+00:00",
+        "step_ix": 3,
+        "thought": "I need to import the required module, 'urllib.request', to fetch data from the URL. I will then open the URL and read the data. Since the data is in JSON format, I'll decode it and load it as a Python object. Next, I'll extract the 'title' field from the JSON data. Finally, I'll write this title to a file named 'todo.txt'.\n\nI'll write the Python code to a file named 'fetch_todo.py' and ensure it's saved in the workspace.",
+        "tool": "write_file",
+        "args": {
+          "files": {
+            "fetch_todo.py": "import urllib.request\n\nurl = \"https://jsonplaceholder.typicode.com/todos/1\"\ntodo_file = \"todo.txt\"\n\n# Fetch JSON data from the URL\nwith urllib.request.urlopen(url) as response:\n    data = response.read()\n    json_data = data.decode('utf-8')\n\n# Extract the 'title' from the JSON\ntodo_title = json.loads(json_data)[\"title\"]\n\n# Write the title to 'todo.txt'\nwith open(todo_file, \"w\") as file:\n    file.write(todo_title)"
+          }
+        },
+        "result": {
+          "ok": false,
+          "error_type": "args_invalid",
+          "tool": "write_file",
+          "details": [
+            {
+              "type": "missing",
+              "loc": [
+                "path"
+              ],
+              "msg": "Field required",
+              "input": {
+                "files": {
+                  "fetch_todo.py": "import urllib.request\n\nurl = \"https://jsonplaceholder.typicode.com/todos/1\"\ntodo_file = \"todo.txt\"\n\n# Fetch JSON data from the URL\nwith urllib.request.urlopen(url) as response:\n    data = response.read()\n    json_data = data.decode('utf-8')\n\n# Extract the 'title' from the JSON\ntodo_title = json.loads(json_data)[\"title\"]\n\n# Write the title to 'todo.txt'\nwith open(todo_file, \"w\") as file:\n    file.write(todo_title)"
+                }
+              },
+              "url": "https://errors.pydantic.dev/2.12/v/missing"
+            },
+            {
+              "type": "missing",
+              "loc": [
+                "content"
+              ],
+              "msg": "Field required",
+              "input": {
+                "files": {
+                  "fetch_todo.py": "import urllib.request\n\nurl = \"https://jsonplaceholder.typicode.com/todos/1\"\ntodo_file = \"todo.txt\"\n\n# Fetch JSON data from the URL\nwith urllib.request.urlopen(url) as response:\n    data = response.read()\n    json_data = data.decode('utf-8')\n\n# Extract the 'title' from the JSON\ntodo_title = json.loads(json_data)[\"title\"]\n\n# Write the title to 'todo.txt'\nwith open(todo_file, \"w\") as file:\n    file.write(todo_title)"
+                }
+              },
+              "url": "https://errors.pydantic.dev/2.12/v/missing"
+            }
+          ]
+        },
+        "eval": {
+          "success": false,
+          "coherence": 0.2,
+          "plan_valid": true,
+          "mode": "F1",
+          "evidence": "Tool write_file failed (args_invalid)",
+          "goal_alignment": 0.2
+        },
+        "correction_trigger": null
+      },
+      {
+        "ts": "2026-07-20T18:49:00.001892+00:00",
+        "step_ix": 4,
+        "thought": "[recovery re-invoke] tool_failure",
+        "tool": "write_file",
+        "args": {
+          "files": {
+            "fetch_todo.py": "import urllib.request\n\nurl = \"https://jsonplaceholder.typicode.com/todos/1\"\ntodo_file = \"todo.txt\"\n\n# Fetch JSON data from the URL\nwith urllib.request.urlopen(url) as response:\n    data = response.read()\n    json_data = data.decode('utf-8')\n\n# Extract the 'title' from the JSON\ntodo_title = json.loads(json_data)[\"title\"]\n\n# Write the title to 'todo.txt'\nwith open(todo_file, \"w\") as file:\n    file.write(todo_title)"
+          },
+          "timeout": 60
+        },
+        "result": {
+          "ok": false,
+          "error_type": "args_invalid",
+          "tool": "write_file",
+          "details": [
+            {
+              "type": "missing",
+              "loc": [
+                "path"
+              ],
+              "msg": "Field required",
+              "input": {
+                "files": {
+                  "fetch_todo.py": "import urllib.request\n\nurl = \"https://jsonplaceholder.typicode.com/todos/1\"\ntodo_file = \"todo.txt\"\n\n# Fetch JSON data from the URL\nwith urllib.request.urlopen(url) as response:\n    data = response.read()\n    json_data = data.decode('utf-8')\n\n# Extract the 'title' from the JSON\ntodo_title = json.loads(json_data)[\"title\"]\n\n# Write the title to 'todo.txt'\nwith open(todo_file, \"w\") as file:\n    file.write(todo_title)"
+                },
+                "timeout": 60
+              },
+              "url": "https://errors.pydantic.dev/2.12/v/missing"
+            },
+            {
+              "type": "missing",
+              "loc": [
+                "content"
+              ],
+              "msg": "Field required",
+              "input": {
+                "files": {
+                  "fetch_todo.py": "import urllib.request\n\nurl = \"https://jsonplaceholder.typicode.com/todos/1\"\ntodo_file = \"todo.txt\"\n\n# Fetch JSON data from the URL\nwith urllib.request.urlopen(url) as response:\n    data = response.read()\n    json_data = data.decode('utf-8')\n\n# Extract the 'title' from the JSON\ntodo_title = json.loads(json_data)[\"title\"]\n\n# Write the title to 'todo.txt'\nwith open(todo_file, \"w\") as file:\n    file.write(todo_title)"
+                },
+                "timeout": 60
+              },
+              "url": "https://errors.pydantic.dev/2.12/v/missing"
+            }
+          ]
+        },
+        "eval": {
+          "success": false,
+          "coherence": 0.2,
+          "plan_valid": true,
+          "mode": "F1",
+          "evidence": "Tool write_file failed (args_invalid)",
+          "goal_alignment": 0.2
+        },
+        "correction_trigger": "F1"
+      },
+      {
+        "ts": "2026-07-20T18:49:08.939842+00:00",
+        "step_ix": 5,
+        "thought": "I need to write a Python script that fetches JSON data from the provided URL, extracts the 'title' field, and saves it to a file named 'todo.txt'. I will use the 'urllib.request' module for this task.\n\nThe script will follow these steps:\n1. Import the required module: 'urllib.request'.\n2. Define the URL and the output file path.\n3. Use 'urllib.request.urlopen' to fetch the JSON data from the URL.\n4. Decode the fetched data to a string.\n5. Load the JSON data and extract the 'title' field.\n6. Write the extracted title to the 'todo.txt' file.",
+        "tool": "write_file",
+        "args": {
+          "files": {
+            "fetch_todo.py": "import urllib.request\n\nurl = \"https://jsonplaceholder.typicode.com/todos/1\"\ntodo_file = \"todo.txt\"\n\n# Fetch JSON data from the URL\ndata = urllib.request.urlopen(url).read()\njson_data = data.decode('utf-8')\n\n# Extract the 'title' from the JSON\ntodo_title = json.loads(json_data)[\"title\"]\n\n# Write the title to 'todo.txt'\nwith open(todo_file, \"w\") as file:\n    file.write(todo_title)"
+          }
+        },
+        "result": {
+          "ok": false,
+          "error_type": "args_invalid",
+          "tool": "write_file",
+          "details": [
+            {
+              "type": "missing",
+              "loc": [
+                "path"
+              ],
+              "msg": "Field required",
+              "input": {
+                "files": {
+                  "fetch_todo.py": "import urllib.request\n\nurl = \"https://jsonplaceholder.typicode.com/todos/1\"\ntodo_file = \"todo.txt\"\n\n# Fetch JSON data from the URL\ndata = urllib.request.urlopen(url).read()\njson_data = data.decode('utf-8')\n\n# Extract the 'title' from the JSON\ntodo_title = json.loads(json_data)[\"title\"]\n\n# Write the title to 'todo.txt'\nwith open(todo_file, \"w\") as file:\n    file.write(todo_title)"
+                }
+              },
+              "url": "https://errors.pydantic.dev/2.12/v/missing"
+            },
+            {
+              "type": "missing",
+              "loc": [
+                "content"
+              ],
+              "msg": "Field required",
+              "input": {
+                "files": {
+                  "fetch_todo.py": "import urllib.request\n\nurl = \"https://jsonplaceholder.typicode.com/todos/1\"\ntodo_file = \"todo.txt\"\n\n# Fetch JSON data from the URL\ndata = urllib.request.urlopen(url).read()\njson_data = data.decode('utf-8')\n\n# Extract the 'title' from the JSON\ntodo_title = json.loads(json_data)[\"title\"]\n\n# Write the title to 'todo.txt'\nwith open(todo_file, \"w\") as file:\n    file.write(todo_title)"
+                }
+              },
+              "url": "https://errors.pydantic.dev/2.12/v/missing"
+            }
+          ]
+        },
+        "eval": {
+          "success": false,
+          "coherence": 0.2,
+          "plan_valid": true,
+          "mode": "F1",
+          "evidence": "Tool write_file failed (args_invalid)",
+          "goal_alignment": 0.2
+        },
+        "correction_trigger": null
+      }
+    ],
+    "corrections": [
+      {
+        "ts": "2026-07-20T18:48:52.166310+00:00",
+        "step_ix": 1,
+        "mode": "F1",
+        "strategy": "tool_failure",
+        "mutated_object": "call",
+        "new_plan": null,
+        "budget_after": 2,
+        "evidence": "Tool write_file failed: args_invalid"
+      },
+      {
+        "ts": "2026-07-20T18:49:00.001892+00:00",
+        "step_ix": 3,
+        "mode": "F1",
+        "strategy": "tool_failure",
+        "mutated_object": "call",
+        "new_plan": null,
+        "budget_after": 1,
+        "evidence": "Tool write_file failed: args_invalid"
+      },
+      {
+        "ts": "2026-07-20T18:49:08.940835+00:00",
+        "step_ix": 5,
+        "mode": "F1",
+        "strategy": "tool_failure",
+        "mutated_object": "call",
+        "new_plan": null,
+        "budget_after": 0,
+        "evidence": "Tool write_file failed: args_invalid -- substituting fallback tool"
+      },
+      {
+        "ts": "2026-07-20T18:49:08.940835+00:00",
+        "step_ix": 5,
+        "mode": "F5",
+        "strategy": "budget_exceeded",
+        "mutated_object": "stop",
+        "new_plan": null,
+        "budget_after": 0,
+        "evidence": "Budget exhausted for S1 after 3 attempts"
+      }
+    ],
+    "provider_events": [
+      {
+        "ts": 1784573323.4979093,
+        "from": "openrouter",
+        "to": "next",
+        "reason": "Error code: 404 - {'error': {'message': 'No endpoints found for anthropic/claude-3.5-sonnet.', 'code': 404}, 'user_id': 'user_3ELYialS3EtsrlR64uKBy1gNoid'}"
+      },
+      {
+        "ts": 1784573324.0614493,
+        "from": "openrouter",
+        "to": "next",
+        "reason": "Error code: 402 - {'error': {'message': 'This request requires more credits, or fewer max_tokens. You requested up to 1500 tokens, but can only afford 1013. To increase, visit https://openrouter.ai/se"
+      },
+      {
+        "ts": 1784573332.4163034,
+        "from": "openrouter",
+        "to": "next",
+        "reason": "Error code: 404 - {'error': {'message': 'No endpoints found for anthropic/claude-3.5-sonnet.', 'code': 404}, 'user_id': 'user_3ELYialS3EtsrlR64uKBy1gNoid'}"
+      },
+      {
+        "ts": 1784573332.7119365,
+        "from": "openrouter",
+        "to": "next",
+        "reason": "Error code: 402 - {'error': {'message': 'This request requires more credits, or fewer max_tokens. You requested up to 1500 tokens, but can only afford 1013. To increase, visit https://openrouter.ai/se"
+      },
+      {
+        "ts": 1784573340.5627234,
+        "from": "openrouter",
+        "to": "next",
+        "reason": "Error code: 404 - {'error': {'message': 'No endpoints found for anthropic/claude-3.5-sonnet.', 'code': 404}, 'user_id': 'user_3ELYialS3EtsrlR64uKBy1gNoid'}"
+      },
+      {
+        "ts": 1784573340.9832418,
+        "from": "openrouter",
+        "to": "next",
+        "reason": "Error code: 402 - {'error': {'message': 'This request requires more credits, or fewer max_tokens. You requested up to 1500 tokens, but can only afford 1013. To increase, visit https://openrouter.ai/se"
+      }
+    ],
+    "unresolvable": [
+      {
+        "subtask_id": "S1",
+        "modes": [
+          "F1",
+          "F1",
+          "F1"
+        ],
+        "attempts": 3,
+        "evidence": "Budget exhausted for S1 after 3 attempts",
+        "hypothesis": "Subtask S1 may be unreachable with current tools/plan"
+      }
+    ],
+    "final_output": "[UNRESOLVABLE] Write a Python script 'fetch_todo.py' that uses the 'urllib.request' module to fetch JSON data from 'https://jsonplaceholder.typicode.com/todos/1', extract the 'title', and write it to 'todo.txt'. Run the script to generate the file.",
+    "metrics": {
+      "steps": 5,
+      "self_corrections": 4,
+      "provider_switches": 6,
+      "unresolvable_count": 1
+    }
+  }
+}

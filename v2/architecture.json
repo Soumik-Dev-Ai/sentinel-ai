@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "Sentinel AI 2.0 — Multi-Agent Architecture",
+    "output": "architecture.html",
+    "viewBox": [1200, 800],
+    "column_fit": "spread"
+  },
+  "participants": [
+    {"id": "browser", "label": "Browser", "type": "frontend"},
+    {"id": "fastapi", "label": "FastAPI", "type": "backend"},
+    {"id": "orchestrator", "label": "Orchestrator", "type": "backend"},
+    {"id": "coder", "label": "Coder", "type": "backend"},
+    {"id": "critic", "label": "Critic", "type": "backend"},
+    {"id": "executor", "label": "Executor", "type": "backend"},
+    {"id": "router", "label": "Router", "type": "cloud"},
+    {"id": "memory", "label": "VectorStore", "type": "database"},
+    {"id": "recovery", "label": "RetryRouter", "type": "backend"}
+  ],
+  "messages": [
+    {"id": "msg_1", "from": "browser", "to": "fastapi", "y": 160, "label": "WebSocket: {type:'start', goal}"},
+    {"id": "msg_2", "from": "fastapi", "to": "orchestrator", "y": 190, "label": "pipeline.run()"},
+    {"id": "msg_3", "from": "orchestrator", "to": "router", "y": 220, "label": "Tree-of-Thought planning"},
+    {"id": "msg_4", "from": "router", "to": "orchestrator", "y": 250, "label": "Plan with subtasks"},
+    {"id": "msg_5", "from": "orchestrator", "to": "coder", "y": 280, "label": "coder.run(subtask)"},
+    {"id": "msg_6", "from": "coder", "to": "router", "y": 310, "label": "LLM chat (tier: coding)"},
+    {"id": "msg_7", "from": "router", "to": "coder", "y": 340, "label": "Generated code"},
+    {"id": "msg_8", "from": "orchestrator", "to": "critic", "y": 370, "label": "critic.run(code)"},
+    {"id": "msg_9", "from": "critic", "to": "router", "y": 400, "label": "LLM chat (tier: fast_eval)"},
+    {"id": "msg_10", "from": "router", "to": "critic", "y": 430, "label": "Verdict JSON"},
+    {"id": "msg_11", "from": "critic", "to": "orchestrator", "y": 460, "label": "ACCEPT / REJECT"},
+    {"id": "msg_12", "from": "orchestrator", "to": "executor", "y": 490, "label": "executor.run()"},
+    {"id": "msg_13", "from": "executor", "to": "orchestrator", "y": 520, "label": "exit_code, output"},
+    {"id": "msg_14", "from": "orchestrator", "to": "recovery", "y": 550, "label": "classify(failure)"},
+    {"id": "msg_15", "from": "recovery", "to": "orchestrator", "y": 580, "label": "Strategy"},
+    {"id": "msg_16", "from": "orchestrator", "to": "memory", "y": 610, "label": "memory.add()"},
+    {"id": "msg_17", "from": "fastapi", "to": "browser", "y": 640, "label": "WebSocket events"}
+  ]
+}

@@ -1,0 +1,320 @@
+{
+  "goal_id": "goal_1",
+  "spec": "Write a Python script hello.py that prints hello",
+  "self_correction_enabled": true,
+  "success": false,
+  "steps": 5,
+  "self_corrections": 4,
+  "elapsed_seconds": 10.400363683700562,
+  "memory_dump": {
+    "run_id": "ee6c8486-e0c",
+    "goal": {
+      "id": "goal_1",
+      "spec": "Write a Python script hello.py that prints hello",
+      "acceptance": []
+    },
+    "plan_current": [
+      {
+        "id": "S1",
+        "desc": "Write a Python script hello.py that prints hello",
+        "status": "unresolvable"
+      }
+    ],
+    "steps": [
+      {
+        "ts": "2026-07-20T19:37:49.496836+00:00",
+        "step_ix": 1,
+        "thought": "To write the Python script, I will use the write_file tool to create a new file named 'hello.py' and insert the code to print 'hello'.",
+        "tool": "write_file",
+        "args": {
+          "file_path": "hello.py",
+          "content": "print(\"hello\")"
+        },
+        "result": {
+          "ok": false,
+          "error_type": "args_invalid",
+          "tool": "write_file",
+          "details": [
+            {
+              "type": "missing",
+              "loc": [
+                "path"
+              ],
+              "msg": "Field required",
+              "input": {
+                "file_path": "hello.py",
+                "content": "print(\"hello\")"
+              },
+              "url": "https://errors.pydantic.dev/2.12/v/missing"
+            }
+          ]
+        },
+        "eval": {
+          "success": false,
+          "coherence": 0.2,
+          "plan_valid": true,
+          "mode": "F1",
+          "evidence": "Tool write_file failed (args_invalid)",
+          "goal_alignment": 0.2
+        },
+        "correction_trigger": null
+      },
+      {
+        "ts": "2026-07-20T19:37:49.496836+00:00",
+        "step_ix": 2,
+        "thought": "[recovery re-invoke] tool_failure",
+        "tool": "write_file",
+        "args": {
+          "file_path": "hello.py",
+          "content": "print(\"hello\")",
+          "timeout": 60
+        },
+        "result": {
+          "ok": false,
+          "error_type": "args_invalid",
+          "tool": "write_file",
+          "details": [
+            {
+              "type": "missing",
+              "loc": [
+                "path"
+              ],
+              "msg": "Field required",
+              "input": {
+                "file_path": "hello.py",
+                "content": "print(\"hello\")",
+                "timeout": 60
+              },
+              "url": "https://errors.pydantic.dev/2.12/v/missing"
+            }
+          ]
+        },
+        "eval": {
+          "success": false,
+          "coherence": 0.2,
+          "plan_valid": true,
+          "mode": "F1",
+          "evidence": "Tool write_file failed (args_invalid)",
+          "goal_alignment": 0.2
+        },
+        "correction_trigger": "F1"
+      },
+      {
+        "ts": "2026-07-20T19:37:53.016895+00:00",
+        "step_ix": 3,
+        "thought": "I will write the code to print 'hello' in a Python script named 'hello.py'. I will use the print function with the string 'hello' as the argument.",
+        "tool": "write_file",
+        "args": {
+          "file_path": "hello.py",
+          "content": "print(\"hello\")"
+        },
+        "result": {
+          "ok": false,
+          "error_type": "args_invalid",
+          "tool": "write_file",
+          "details": [
+            {
+              "type": "missing",
+              "loc": [
+                "path"
+              ],
+              "msg": "Field required",
+              "input": {
+                "file_path": "hello.py",
+                "content": "print(\"hello\")"
+              },
+              "url": "https://errors.pydantic.dev/2.12/v/missing"
+            }
+          ]
+        },
+        "eval": {
+          "success": false,
+          "coherence": 0.2,
+          "plan_valid": true,
+          "mode": "F1",
+          "evidence": "Tool write_file failed (args_invalid)",
+          "goal_alignment": 0.2
+        },
+        "correction_trigger": null
+      },
+      {
+        "ts": "2026-07-20T19:37:53.016895+00:00",
+        "step_ix": 4,
+        "thought": "[recovery re-invoke] tool_failure",
+        "tool": "write_file",
+        "args": {
+          "file_path": "hello.py",
+          "content": "print(\"hello\")",
+          "timeout": 60
+        },
+        "result": {
+          "ok": false,
+          "error_type": "args_invalid",
+          "tool": "write_file",
+          "details": [
+            {
+              "type": "missing",
+              "loc": [
+                "path"
+              ],
+              "msg": "Field required",
+              "input": {
+                "file_path": "hello.py",
+                "content": "print(\"hello\")",
+                "timeout": 60
+              },
+              "url": "https://errors.pydantic.dev/2.12/v/missing"
+            }
+          ]
+        },
+        "eval": {
+          "success": false,
+          "coherence": 0.2,
+          "plan_valid": true,
+          "mode": "F1",
+          "evidence": "Tool write_file failed (args_invalid)",
+          "goal_alignment": 0.2
+        },
+        "correction_trigger": "F1"
+      },
+      {
+        "ts": "2026-07-20T19:37:56.056288+00:00",
+        "step_ix": 5,
+        "thought": "I will write the Python script hello.py with the content 'print(\"hello\")'. This will ensure that when the script is run, it will print the word 'hello'.",
+        "tool": "write_file",
+        "args": {
+          "file_path": "hello.py",
+          "content": "print(\"hello\")"
+        },
+        "result": {
+          "ok": false,
+          "error_type": "args_invalid",
+          "tool": "write_file",
+          "details": [
+            {
+              "type": "missing",
+              "loc": [
+                "path"
+              ],
+              "msg": "Field required",
+              "input": {
+                "file_path": "hello.py",
+                "content": "print(\"hello\")"
+              },
+              "url": "https://errors.pydantic.dev/2.12/v/missing"
+            }
+          ]
+        },
+        "eval": {
+          "success": false,
+          "coherence": 0.2,
+          "plan_valid": true,
+          "mode": "F1",
+          "evidence": "Tool write_file failed (args_invalid)",
+          "goal_alignment": 0.2
+        },
+        "correction_trigger": null
+      }
+    ],
+    "corrections": [
+      {
+        "ts": "2026-07-20T19:37:49.496836+00:00",
+        "step_ix": 1,
+        "mode": "F1",
+        "strategy": "tool_failure",
+        "mutated_object": "call",
+        "new_plan": null,
+        "budget_after": 2,
+        "evidence": "Tool write_file failed: args_invalid"
+      },
+      {
+        "ts": "2026-07-20T19:37:53.016895+00:00",
+        "step_ix": 3,
+        "mode": "F1",
+        "strategy": "tool_failure",
+        "mutated_object": "call",
+        "new_plan": null,
+        "budget_after": 1,
+        "evidence": "Tool write_file failed: args_invalid"
+      },
+      {
+        "ts": "2026-07-20T19:37:56.056288+00:00",
+        "step_ix": 5,
+        "mode": "F1",
+        "strategy": "tool_failure",
+        "mutated_object": "call",
+        "new_plan": null,
+        "budget_after": 0,
+        "evidence": "Tool write_file failed: args_invalid -- substituting fallback tool"
+      },
+      {
+        "ts": "2026-07-20T19:37:56.056288+00:00",
+        "step_ix": 5,
+        "mode": "F5",
+        "strategy": "budget_exceeded",
+        "mutated_object": "stop",
+        "new_plan": null,
+        "budget_after": 0,
+        "evidence": "Budget exhausted for S1 after 3 attempts"
+      }
+    ],
+    "provider_events": [
+      {
+        "ts": 1784576266.1766348,
+        "from": "openrouter",
+        "to": "next",
+        "reason": "Error code: 404 - {'error': {'message': 'No endpoints found for anthropic/claude-3.5-sonnet.', 'code': 404}, 'user_id': 'user_3ELYialS3EtsrlR64uKBy1gNoid'}"
+      },
+      {
+        "ts": 1784576266.7000837,
+        "from": "openrouter",
+        "to": "next",
+        "reason": "Error code: 402 - {'error': {'message': 'This request requires more credits, or fewer max_tokens. You requested up to 1500 tokens, but can only afford 991. To increase, visit https://openrouter.ai/set"
+      },
+      {
+        "ts": 1784576269.6207016,
+        "from": "openrouter",
+        "to": "next",
+        "reason": "Error code: 404 - {'error': {'message': 'No endpoints found for anthropic/claude-3.5-sonnet.', 'code': 404}, 'user_id': 'user_3ELYialS3EtsrlR64uKBy1gNoid'}"
+      },
+      {
+        "ts": 1784576270.1268528,
+        "from": "openrouter",
+        "to": "next",
+        "reason": "Error code: 402 - {'error': {'message': 'This request requires more credits, or fewer max_tokens. You requested up to 1500 tokens, but can only afford 991. To increase, visit https://openrouter.ai/set"
+      },
+      {
+        "ts": 1784576273.1460443,
+        "from": "openrouter",
+        "to": "next",
+        "reason": "Error code: 404 - {'error': {'message': 'No endpoints found for anthropic/claude-3.5-sonnet.', 'code': 404}, 'user_id': 'user_3ELYialS3EtsrlR64uKBy1gNoid'}"
+      },
+      {
+        "ts": 1784576273.2747583,
+        "from": "openrouter",
+        "to": "next",
+        "reason": "Error code: 402 - {'error': {'message': 'This request requires more credits, or fewer max_tokens. You requested up to 1500 tokens, but can only afford 991. To increase, visit https://openrouter.ai/set"
+      }
+    ],
+    "unresolvable": [
+      {
+        "subtask_id": "S1",
+        "modes": [
+          "F1",
+          "F1",
+          "F1"
+        ],
+        "attempts": 3,
+        "evidence": "Budget exhausted for S1 after 3 attempts",
+        "hypothesis": "Subtask S1 may be unreachable with current tools/plan"
+      }
+    ],
+    "final_output": "[UNRESOLVABLE] Write a Python script hello.py that prints hello",
+    "metrics": {
+      "steps": 5,
+      "self_corrections": 4,
+      "provider_switches": 6,
+      "unresolvable_count": 1
+    }
+  }
+}

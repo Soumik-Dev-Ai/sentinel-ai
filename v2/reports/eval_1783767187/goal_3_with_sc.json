@@ -1,0 +1,196 @@
+{
+  "goal_id": "goal_3",
+  "spec": "Use the FlakyNetTool to fetch data from 'https://example.com' and write the HTML content to 'index.html'. If it fails, retry until it succeeds.",
+  "self_correction_enabled": true,
+  "success": true,
+  "steps": 3,
+  "self_corrections": 2,
+  "elapsed_seconds": 57.45033860206604,
+  "memory_dump": {
+    "run_id": "3b9e72de-34f",
+    "goal": {
+      "id": "goal_3",
+      "spec": "Use the FlakyNetTool to fetch data from 'https://example.com' and write the HTML content to 'index.html'. If it fails, retry until it succeeds.",
+      "acceptance": []
+    },
+    "plan_current": [
+      {
+        "id": "S1",
+        "desc": "Use the FlakyNetTool to fetch data from 'https://example.com' and write the HTML content to 'index.html'. If it fails, retry until it succeeds.",
+        "status": "active"
+      }
+    ],
+    "steps": [
+      {
+        "ts": "2026-07-11T10:54:38.258703+00:00",
+        "step_ix": 1,
+        "thought": "",
+        "tool": "flaky_net",
+        "args": {
+          "package": "https://example.com"
+        },
+        "result": {
+          "ok": false,
+          "error_type": "shape_violation",
+          "tool": "flaky_net",
+          "details": [
+            {
+              "type": "missing",
+              "loc": [
+                "version"
+              ],
+              "msg": "Field required",
+              "input": {
+                "package": "https://example.com",
+                "installed": true
+              },
+              "url": "https://errors.pydantic.dev/2.12/v/missing"
+            }
+          ],
+          "raw_result": {
+            "package": "https://example.com",
+            "installed": true
+          }
+        },
+        "eval": {
+          "success": false,
+          "coherence": 0.2,
+          "plan_valid": true,
+          "mode": "F1",
+          "evidence": "Tool flaky_net failed (shape_violation)",
+          "goal_alignment": 0.2
+        },
+        "correction_trigger": null
+      },
+      {
+        "ts": "2026-07-11T10:54:42.006861+00:00",
+        "step_ix": 2,
+        "thought": "",
+        "tool": "flaky_net",
+        "args": {
+          "package": "https://example.com"
+        },
+        "result": {
+          "ok": false,
+          "error_type": "tool_exception",
+          "tool": "flaky_net",
+          "details": "ToolFailure[flaky_net]: Network timeout"
+        },
+        "eval": {
+          "success": false,
+          "coherence": 0.2,
+          "plan_valid": true,
+          "mode": "F1",
+          "evidence": "Tool flaky_net failed (tool_exception)",
+          "goal_alignment": 0.2
+        },
+        "correction_trigger": null
+      },
+      {
+        "ts": "2026-07-11T10:54:42.006861+00:00",
+        "step_ix": 3,
+        "thought": "[recovery re-invoke] tool_failure",
+        "tool": "flaky_net",
+        "args": {
+          "package": "https://example.com",
+          "timeout": 60
+        },
+        "result": {
+          "ok": false,
+          "error_type": "tool_exception",
+          "tool": "flaky_net",
+          "details": "ToolFailure[flaky_net]: Network timeout"
+        },
+        "eval": {
+          "success": false,
+          "coherence": 0.2,
+          "plan_valid": true,
+          "mode": "F1",
+          "evidence": "Tool flaky_net failed (tool_exception)",
+          "goal_alignment": 0.2
+        },
+        "correction_trigger": "F1"
+      }
+    ],
+    "corrections": [
+      {
+        "ts": "2026-07-11T10:54:38.259846+00:00",
+        "step_ix": 1,
+        "mode": "F1",
+        "strategy": "tool_failure",
+        "mutated_object": "call",
+        "new_plan": null,
+        "budget_after": 2,
+        "evidence": "Tool flaky_net failed: shape_violation -- substituting fallback tool"
+      },
+      {
+        "ts": "2026-07-11T10:54:42.006861+00:00",
+        "step_ix": 2,
+        "mode": "F1",
+        "strategy": "tool_failure",
+        "mutated_object": "call",
+        "new_plan": null,
+        "budget_after": 1,
+        "evidence": "Tool flaky_net failed: tool_exception"
+      }
+    ],
+    "provider_events": [
+      {
+        "ts": 1783767243.5366066,
+        "from": "openrouter",
+        "to": "next",
+        "reason": "Error code: 404 - {'error': {'message': 'No endpoints found for anthropic/claude-3.5-sonnet.', 'code': 404}, 'user_id': 'user_3ELYialS3EtsrlR64uKBy1gNoid'}"
+      },
+      {
+        "ts": 1783767243.7607207,
+        "from": "groq",
+        "to": "next",
+        "reason": "Error code: 429 - {'error': {'message': 'Rate limit reached for model `llama-3.3-70b-versatile` in organization `org_01kvysb4bwemfv98v689vckj3k` service tier `on_demand` on tokens per day (TPD): Limit"
+      },
+      {
+        "ts": 1783767278.7994013,
+        "from": "openrouter",
+        "to": "next",
+        "reason": "Error code: 404 - {'error': {'message': 'No endpoints found for anthropic/claude-3.5-sonnet.', 'code': 404}, 'user_id': 'user_3ELYialS3EtsrlR64uKBy1gNoid'}"
+      },
+      {
+        "ts": 1783767279.0247653,
+        "from": "groq",
+        "to": "next",
+        "reason": "Error code: 429 - {'error': {'message': 'Rate limit reached for model `llama-3.3-70b-versatile` in organization `org_01kvysb4bwemfv98v689vckj3k` service tier `on_demand` on tokens per day (TPD): Limit"
+      },
+      {
+        "ts": 1783767282.1220124,
+        "from": "openrouter",
+        "to": "next",
+        "reason": "Error code: 404 - {'error': {'message': 'No endpoints found for anthropic/claude-3.5-sonnet.', 'code': 404}, 'user_id': 'user_3ELYialS3EtsrlR64uKBy1gNoid'}"
+      },
+      {
+        "ts": 1783767282.271277,
+        "from": "groq",
+        "to": "next",
+        "reason": "Error code: 429 - {'error': {'message': 'Rate limit reached for model `llama-3.3-70b-versatile` in organization `org_01kvysb4bwemfv98v689vckj3k` service tier `on_demand` on tokens per day (TPD): Limit"
+      },
+      {
+        "ts": 1783767295.0471818,
+        "from": "openrouter",
+        "to": "next",
+        "reason": "Error code: 404 - {'error': {'message': 'No endpoints found for anthropic/claude-3.5-sonnet.', 'code': 404}, 'user_id': 'user_3ELYialS3EtsrlR64uKBy1gNoid'}"
+      },
+      {
+        "ts": 1783767295.2978597,
+        "from": "groq",
+        "to": "next",
+        "reason": "Error code: 429 - {'error': {'message': 'Rate limit reached for model `llama-3.3-70b-versatile` in organization `org_01kvysb4bwemfv98v689vckj3k` service tier `on_demand` on tokens per day (TPD): Limit"
+      }
+    ],
+    "unresolvable": [],
+    "final_output": "No action produced by LLM",
+    "metrics": {
+      "steps": 3,
+      "self_corrections": 2,
+      "provider_switches": 8,
+      "unresolvable_count": 0
+    }
+  }
+}

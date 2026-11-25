@@ -187,7 +187,7 @@ Measured on the standardized 12-task Evaluation Lab benchmark suite (`eval_17918
 ```bash
 # Clone the repository
 git clone https://github.com/Soumik-Dev-Ai/Sentinel-Ai-private.git
-cd Sentinel-Ai-private/"Sentinel AI"
+cd Sentinel-Ai-private/v2
 
 # Set up Python virtual environment
 python -m venv .venv
@@ -267,14 +267,22 @@ The frontend communicates with the backend in real time via `ws://<host>:<port>/
 
 ---
 
-## 📂 Repository Structure
+## 📂 Repository Structure (v1 vs v2 Architecture)
 
 ```text
-├── Sentinel AI/
-│   ├── app.py                      # Hugging Face ZeroGPU entry point (FastAPI + Gradio)
+├── v1/                             # Version 1.0 — Original Single-Agent ReAct System
+│   ├── backend/                    # Original ReAct loop, tools, and router
+│   ├── frontend/                   # Original React dashboard
+│   ├── docs/                       # v1 documentation specifications
+│   ├── reports/                    # v1 test reports & artifacts
+│   ├── requirements.txt            # v1 dependencies
+│   └── README.md                   # v1 architecture summary
+│
+├── v2/                             # Version 2.0 — Multi-Agent Self-Correcting Platform
+│   ├── app.py                      # ZeroGPU entry point (FastAPI + Gradio)
 │   ├── Dockerfile                  # Multi-stage polyglot container specification
 │   ├── packages.txt                # Linux distribution packages (gcc, go, rustc, nodejs)
-│   ├── requirements.txt            # Python dependencies
+│   ├── requirements.txt            # v2 dependencies
 │   ├── backend/
 │   │   ├── config.py               # Centralized configuration & environment loader
 │   │   ├── eval_suite.py           # Evaluation Lab automated benchmark runner
@@ -298,18 +306,20 @@ The frontend communicates with the backend in real time via `ws://<host>:<port>/
 │       │   ├── hooks/              # useAgentSocket (real-time WebSocket state management)
 │       │   └── services/           # REST API client & evaluation bridge
 │       └── package.json            # Frontend dependencies & build scripts
-└── README.md                       # Repository overview & quickstart guide
+│
+└── README.md                       # Root Repository Index & Quickstart
 ```
 
 ---
 
 ## 📚 Documentation Index
 
-- **[System Architecture (ARCHITECTURE.md)](./Sentinel%20AI/docs/ARCHITECTURE.md)**: Deep dive into the multi-agent state machine, WebSocket lifecycle, and IPC protocol.
-- **[Benchmark Report (BENCHMARK_REPORT.md)](./Sentinel%20AI/docs/BENCHMARK_REPORT.md)**: Empirical comparison of Self-Correction ON vs OFF across 12 canonical tasks.
-- **[Product Requirements Document (PRD.md)](./Sentinel%20AI/docs/PRD.md)**: Functional requirements, user workflows, and error recovery specifications.
-- **[Tech Stack Reference (TECH_STACK.md)](./Sentinel%20AI/docs/TECH_STACK.md)**: Exhaustive breakdown of libraries, runtimes, and LLM providers.
-- **[Testing & Verification Plan (TESTING_PLAN.md)](./Sentinel%20AI/docs/TESTING_PLAN.md)**: Test suites, coverage requirements, and sandbox safety criteria.
+- **[System Architecture (ARCHITECTURE.md)](./v2/docs/ARCHITECTURE.md)**: Deep dive into the multi-agent state machine, WebSocket lifecycle, and IPC protocol.
+- **[Benchmark Report (BENCHMARK_REPORT.md)](./v2/docs/BENCHMARK_REPORT.md)**: Empirical comparison of Self-Correction ON vs OFF across 12 canonical tasks.
+- **[Product Requirements Document (PRD.md)](./v2/docs/PRD.md)**: Functional requirements, user workflows, and error recovery specifications.
+- **[Tech Stack Reference (TECH_STACK.md)](./v2/docs/TECH_STACK.md)**: Exhaustive breakdown of libraries, runtimes, and LLM providers.
+- **[Testing & Verification Plan (TESTING_PLAN.md)](./v2/docs/TESTING_PLAN.md)**: Test suites, coverage requirements, and sandbox safety criteria.
+- **[Version 1 Archive (v1/README.md)](./v1/README.md)**: Complete original Version 1.0 documentation.
 
 ---
 

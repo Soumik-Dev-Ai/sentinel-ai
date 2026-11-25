@@ -1,0 +1,35 @@
+{
+  "run_name": "eval_1789569745",
+  "timestamp": 1789569745,
+  "total_goals": 1,
+  "metrics_with_self_correction": {
+    "completion_rate": 0.0,
+    "avg_steps": 0.0,
+    "total_self_corrections": 0,
+    "avg_elapsed": 0.0
+  },
+  "metrics_baseline": {
+    "completion_rate": 0.0,
+    "avg_steps": 0.0,
+    "total_self_corrections": 0,
+    "avg_elapsed": 0.0
+  },
+  "runs": [
+    {
+      "goal_id": "test_goal_1",
+      "self_correction_enabled": false,
+      "success": false,
+      "steps": 0,
+      "self_corrections": 0,
+      "elapsed_seconds": 0
+    },
+    {
+      "goal_id": "test_goal_1",
+      "self_correction_enabled": true,
+      "success": false,
+      "steps": 0,
+      "self_corrections": 0,
+      "elapsed_seconds": 0
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "goal_id": "test_goal",
+  "spec": "Write a Python script hello.py that prints hello",
+  "self_correction_enabled": false,
+  "success": false,
+  "steps": 0,
+  "self_corrections": 0,
+  "elapsed_seconds": 0,
+  "memory_dump": {
+    "final_output": "Agent crashed: TypeError: MultiAgentPipeline.__init__() got an unexpected keyword argument 'cfg'",
+    "steps": []
+  }
+}

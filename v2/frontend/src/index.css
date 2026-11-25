@@ -1,0 +1,521 @@
+@import "tailwindcss";
+
+/* ===== SENTINEL AI — Dark Theme Custom Properties ===== */
+:root {
+  --background: 0 0% 10%;
+  --foreground: 0 0% 96%;
+
+  --primary: 119 99% 46%;
+  --primary-foreground: 0 0% 4%;
+
+  --secondary: 0 0% 18%;
+  --secondary-foreground: 0 0% 96%;
+
+  --muted: 0 0% 16%;
+  --muted-foreground: 0 0% 60%;
+
+  --accent: 119 99% 46%;
+  --accent-foreground: 0 0% 4%;
+
+  --destructive: 0 84% 60%;
+
+  --border: 0 0% 20%;
+  --input: 0 0% 20%;
+  --ring: 119 99% 46%;
+  --radius: 0.5rem;
+
+  --nav-button: 0 0% 18%;
+  --hero-bg: 0 0% 8%;
+}
+
+/* ===== Base Styles ===== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: "Sora", sans-serif;
+  background-color: hsl(var(--hero-bg));
+  color: hsl(var(--foreground));
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+/* ===== Scrollbar Styling ===== */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: hsl(var(--hero-bg));
+}
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted));
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground));
+}
+
+/* ===== Custom Animations ===== */
+@keyframes fade-up {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+    filter: blur(4px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+@keyframes fade-in {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes pulse-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 20px hsla(var(--primary), 0.15),
+      0 0 60px hsla(var(--primary), 0.05);
+  }
+  50% {
+    box-shadow: 0 0 30px hsla(var(--primary), 0.3),
+      0 0 80px hsla(var(--primary), 0.1);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
+@keyframes scan-line {
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(100vh);
+  }
+}
+
+.animate-fade-up {
+  animation: fade-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-fade-in {
+  animation: fade-in 0.5s ease-out forwards;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 3s ease-in-out infinite;
+}
+
+.animate-shimmer {
+  background-size: 200% 100%;
+  animation: shimmer 2s linear infinite;
+}
+
+.animate-blink {
+  animation: blink 1s step-end infinite;
+}
+
+/* ===== Glass Morphism Utilities ===== */
+.glass {
+  background: hsla(0, 0%, 100%, 0.04);
+  backdrop-filter: blur(24px) saturate(1.2);
+  -webkit-backdrop-filter: blur(24px) saturate(1.2);
+  border: 1px solid hsla(0, 0%, 100%, 0.08);
+}
+
+.glass-strong {
+  background: hsla(0, 0%, 100%, 0.07);
+  backdrop-filter: blur(40px) saturate(1.4);
+  -webkit-backdrop-filter: blur(40px) saturate(1.4);
+  border: 1px solid hsla(0, 0%, 100%, 0.12);
+}
+
+.glass-green {
+  background: hsla(119, 99%, 46%, 0.06);
+  backdrop-filter: blur(30px) saturate(1.3);
+  -webkit-backdrop-filter: blur(30px) saturate(1.3);
+  border: 1px solid hsla(119, 99%, 46%, 0.15);
+}
+
+/* ===== Terminal Styling ===== */
+.terminal-text {
+  font-family: "JetBrains Mono", "Fira Code", "Cascadia Code", monospace;
+  font-size: 0.8rem;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.terminal-cursor::after {
+  content: "▋";
+  animation: blink 1s step-end infinite;
+  color: hsl(var(--primary));
+}
+
+/* Evaluation Lab Styles */
+.eval-lab {
+  color: white;
+  padding: 40px;
+  max-width: 1400px;
+  margin: 0 auto;
+  font-family: "Sora", sans-serif;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.eval-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  padding-bottom: 20px;
+}
+
+.eval-header h2 {
+  font-size: 2rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.run-eval-btn {
+  background: linear-gradient(135deg, #16a34a, #22c55e);
+  color: black;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.run-eval-btn:hover {
+  background: #16a34a;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.4);
+}
+
+.progress-bar {
+  background: rgba(255,255,255,0.1);
+  border-radius: 8px;
+  padding: 10px 20px;
+  position: relative;
+  overflow: hidden;
+  min-width: 300px;
+  text-align: center;
+}
+
+.progress-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: rgba(34, 197, 94, 0.5);
+  transition: width 0.3s ease;
+  z-index: 1;
+}
+
+.progress-bar span {
+  position: relative;
+  z-index: 2;
+  font-weight: 500;
+}
+
+.eval-content {
+  display: flex;
+  gap: 30px;
+  flex-grow: 1;
+  min-height: 0;
+}
+
+.eval-sidebar {
+  width: 300px;
+  flex-shrink: 0;
+  background: rgba(0,0,0,0.5);
+  border-radius: 12px;
+  padding: 20px;
+  border: 1px solid hsla(119, 99%, 46%, 0.15);
+  overflow-y: auto;
+}
+
+.eval-sidebar h3 {
+  margin-top: 0;
+  font-size: 1.2rem;
+  margin-bottom: 20px;
+  color: #22c55e;
+}
+
+.report-item {
+  padding: 12px 15px;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-bottom: 10px;
+  background: rgba(255,255,255,0.03);
+  transition: background 0.2s;
+  font-size: 0.9rem;
+}
+
+.report-item:hover {
+  background: rgba(255,255,255,0.1);
+}
+
+.report-item.active {
+  background: rgba(34, 197, 94, 0.2);
+  border-left: 3px solid #22c55e;
+}
+
+.eval-main {
+  flex-grow: 1;
+  background: rgba(0,0,0,0.5);
+  border-radius: 12px;
+  padding: 30px;
+  border: 1px solid hsla(119, 99%, 46%, 0.15);
+  overflow-y: auto;
+}
+
+.report-details h3 {
+  margin-top: 0;
+  font-size: 1.5rem;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  padding-bottom: 15px;
+  margin-bottom: 25px;
+}
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 40px;
+}
+
+.metric-card {
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  padding: 20px;
+  border-radius: 10px;
+}
+
+.metric-card.baseline {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.metric-card h4 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  font-size: 1.1rem;
+}
+
+.metric-card p {
+  margin: 8px 0;
+  font-size: 1rem;
+  display: flex;
+  justify-content: space-between;
+}
+
+.runs-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.run-card {
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.05);
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.run-card.success {
+  border-left: 4px solid #22c55e;
+}
+
+.run-card.fail {
+  border-left: 4px solid #ef4444;
+}
+
+.run-card h5 {
+  margin-top: 0;
+  font-size: 1.1rem;
+  margin-bottom: 10px;
+}
+
+.run-card p {
+  margin: 5px 0;
+  font-size: 0.95rem;
+  color: rgba(255,255,255,0.8);
+}
+
+.react-trace {
+  margin-top: 15px;
+  background: #000;
+  border-radius: 6px;
+  padding: 15px;
+  font-family: monospace;
+  font-size: 0.85rem;
+}
+
+.trace-step {
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px dashed #333;
+}
+
+.trace-step:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.trace-thought {
+  color: #a855f7;
+  margin-bottom: 8px;
+}
+
+.trace-action {
+  color: #3b82f6;
+  margin-bottom: 8px;
+}
+
+.trace-result {
+  color: #22c55e;
+  background: rgba(34, 197, 94, 0.1);
+  padding: 5px;
+  border-radius: 4px;
+}
+
+.trace-correction {
+  margin-top: 10px;
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+  padding: 5px;
+  border-radius: 4px;
+}
+
+details summary {
+  cursor: pointer;
+  margin-top: 15px;
+  color: #22c55e;
+  font-weight: 500;
+}
+
+.back-3d-btn {
+  position: absolute;
+  top: 11px; /* ~3mm */
+  right: 11px; /* ~3mm */
+  padding: 10px 20px;
+  background: linear-gradient(145deg, #2a2d3e, #1a1c29);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 
+    4px 4px 10px rgba(0, 0, 0, 0.5),
+    -4px -4px 10px rgba(255, 255, 255, 0.05),
+    inset 1px 1px 2px rgba(255, 255, 255, 0.1);
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  z-index: 1000;
+}
+
+.back-3d-btn:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 
+    6px 6px 15px rgba(0, 0, 0, 0.6),
+    -6px -6px 15px rgba(255, 255, 255, 0.05),
+    inset 1px 1px 2px rgba(255, 255, 255, 0.2),
+    0 0 15px rgba(34, 197, 94, 0.6);
+  border-color: rgba(34, 197, 94, 0.5);
+  text-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
+}
+
+.back-3d-btn:active {
+  transform: translateY(2px) scale(0.98);
+  box-shadow: 
+    inset 4px 4px 10px rgba(0, 0, 0, 0.6),
+    inset -4px -4px 10px rgba(255, 255, 255, 0.02);
+}
+
+.final-markdown {
+  color: hsl(var(--foreground));
+  font-family: "Sora", sans-serif;
+  line-height: 1.7;
+}
+
+.final-markdown h3 {
+  font-size: 1.5rem;
+  color: hsl(var(--primary));
+  margin-top: 1.5rem;
+  margin-bottom: 1rem;
+  font-weight: 600;
+}
+
+.final-markdown h4 {
+  font-size: 1.1rem;
+  color: #fff;
+  margin-top: 1.2rem;
+  margin-bottom: 0.5rem;
+}
+
+.final-markdown p {
+  margin-bottom: 1rem;
+}
+
+.final-markdown pre {
+  background: #000;
+  border: 1px solid rgba(255,255,255,0.1);
+  padding: 1rem;
+  border-radius: 8px;
+  overflow-x: auto;
+  font-family: "JetBrains Mono", "Fira Code", monospace;
+  font-size: 0.85rem;
+  margin-bottom: 1.5rem;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.final-markdown code {
+  background: rgba(255,255,255,0.1);
+  padding: 0.15rem 0.3rem;
+  border-radius: 4px;
+  font-family: "JetBrains Mono", "Fira Code", monospace;
+  font-size: 0.85em;
+  white-space: pre-wrap;
+}
+
+.final-markdown pre code {
+  background: transparent;
+  padding: 0;
+}

@@ -1,0 +1,219 @@
+{
+  "goal_id": "goal_1",
+  "spec": "Write a Python script hello.py that prints hello",
+  "self_correction_enabled": false,
+  "success": false,
+  "steps": 6,
+  "self_corrections": 3,
+  "elapsed_seconds": 20.353597164154053,
+  "memory_dump": {
+    "final_output": "Sentinel AI 2.0 \u2014 Multi-Agent Run Report\n============================================================\nGoal: Write a Python script hello.py that prints hello\nChosen plan: P3 (confidence=0.75)\n\nSubtasks:\n  [FAIL] F1 (coder) attempts=0:\n  [FAIL] F2 (executor) attempts=1:\n        file: main.py\n        stderr preview: File not found: C:\\Users\\user\\AppData\\Local\\Temp\\eval_ws_goal_1_l1o3_i34\\main.py\n  [FAIL] F3 (coder) attempts=0:\n  [FAIL] F4 (executor) attempts=1:\n        file: main.py\n        stderr preview: File not found: C:\\Users\\user\\AppData\\Local\\Temp\\eval_ws_goal_1_l1o3_i34\\main.py\n  [FAIL] F5 (coder) attempts=0:\n  [FAIL] F6 (executor) attempts=1:\n        file: main.py\n        stderr preview: File not found: C:\\Users\\user\\AppData\\Local\\Temp\\eval_ws_goal_1_l1o3_i34\\main.py",
+    "plan": {
+      "chosen_path": {
+        "id": "P3",
+        "description": "Using a class",
+        "steps": [
+          "Create a Python file 'hello.py'",
+          "Define a class 'Greeter': 'class Greeter:'",
+          "Inside the class, add a method 'greet': 'def greet(self):'",
+          "In the method, print 'Hello': 'print(\"Hello\")'",
+          "Create an instance of the class: 'greeter = Greeter()'",
+          "Call the greet method: 'greeter.greet()'"
+        ],
+        "confidence": 0.75,
+        "rationale": "Using a class provides an object-oriented approach, which could be beneficial for more complex greetings.",
+        "risks": [
+          "More complex than necessary for a simple task",
+          "Might require additional knowledge of object-oriented programming"
+        ]
+      },
+      "all_paths": [
+        {
+          "id": "P1",
+          "description": "Direct print statement",
+          "steps": [
+            "Write a Python script named 'hello.py'",
+            "Add a print statement to the script: 'print(\"Hello\")'"
+          ],
+          "confidence": 0.9,
+          "rationale": "This is a straightforward approach to achieve the goal.",
+          "risks": []
+        },
+        {
+          "id": "P2",
+          "description": "Using a function",
+          "steps": [
+            "Create a Python file 'hello.py'",
+            "Define a function 'greet()': 'def greet():'",
+            "Inside the function, print 'Hello': 'print(\"Hello\")'",
+            "Call the function: 'greet()'"
+          ],
+          "confidence": 0.85,
+          "rationale": "Encapsulating the greeting in a function provides flexibility for future changes.",
+          "risks": [
+            "Might be overkill for a simple task"
+          ]
+        },
+        {
+          "id": "P3",
+          "description": "Using a class",
+          "steps": [
+            "Create a Python file 'hello.py'",
+            "Define a class 'Greeter': 'class Greeter:'",
+            "Inside the class, add a method 'greet': 'def greet(self):'",
+            "In the method, print 'Hello': 'print(\"Hello\")'",
+            "Create an instance of the class: 'greeter = Greeter()'",
+            "Call the greet method: 'greeter.greet()'"
+          ],
+          "confidence": 0.75,
+          "rationale": "Using a class provides an object-oriented approach, which could be beneficial for more complex greetings.",
+          "risks": [
+            "More complex than necessary for a simple task",
+            "Might require additional knowledge of object-oriented programming"
+          ]
+        }
+      ],
+      "subtasks": [
+        {
+          "id": "F1",
+          "desc": "Create a Python file 'hello.py'",
+          "agent": "coder"
+        },
+        {
+          "id": "F2",
+          "desc": "Define a class 'Greeter': 'class Greeter:'",
+          "agent": "executor"
+        },
+        {
+          "id": "F3",
+          "desc": "Inside the class, add a method 'greet': 'def greet(self):'",
+          "agent": "coder"
+        },
+        {
+          "id": "F4",
+          "desc": "In the method, print 'Hello': 'print(\"Hello\")'",
+          "agent": "executor"
+        },
+        {
+          "id": "F5",
+          "desc": "Create an instance of the class: 'greeter = Greeter()'",
+          "agent": "coder"
+        },
+        {
+          "id": "F6",
+          "desc": "Call the greet method: 'greeter.greet()'",
+          "agent": "executor"
+        }
+      ]
+    },
+    "subtasks": [
+      {
+        "subtask_id": "F1",
+        "agent": "coder",
+        "resolved": false,
+        "outcome": null,
+        "attempts": 0
+      },
+      {
+        "subtask_id": "F2",
+        "agent": "executor",
+        "resolved": false,
+        "outcome": {
+          "ok": true,
+          "filename": "main.py",
+          "exit_code": 127,
+          "stdout": "",
+          "stderr": "File not found: C:\\Users\\user\\AppData\\Local\\Temp\\eval_ws_goal_1_l1o3_i34\\main.py",
+          "parsed_traceback": {
+            "kind": "unknown",
+            "exception": "<unknown>",
+            "line": null,
+            "snippet": "File not found: C:\\Users\\user\\AppData\\Local\\Temp\\eval_ws_goal_1_l1o3_i34\\main.py",
+            "demands_strategy": "none"
+          },
+          "success": false,
+          "node_id": "F2_exec"
+        },
+        "attempts": 1
+      },
+      {
+        "subtask_id": "F3",
+        "agent": "coder",
+        "resolved": false,
+        "outcome": null,
+        "attempts": 0
+      },
+      {
+        "subtask_id": "F4",
+        "agent": "executor",
+        "resolved": false,
+        "outcome": {
+          "ok": true,
+          "filename": "main.py",
+          "exit_code": 127,
+          "stdout": "",
+          "stderr": "File not found: C:\\Users\\user\\AppData\\Local\\Temp\\eval_ws_goal_1_l1o3_i34\\main.py",
+          "parsed_traceback": {
+            "kind": "unknown",
+            "exception": "<unknown>",
+            "line": null,
+            "snippet": "File not found: C:\\Users\\user\\AppData\\Local\\Temp\\eval_ws_goal_1_l1o3_i34\\main.py",
+            "demands_strategy": "none"
+          },
+          "success": false,
+          "node_id": "F4_exec"
+        },
+        "attempts": 1
+      },
+      {
+        "subtask_id": "F5",
+        "agent": "coder",
+        "resolved": false,
+        "outcome": null,
+        "attempts": 0
+      },
+      {
+        "subtask_id": "F6",
+        "agent": "executor",
+        "resolved": false,
+        "outcome": {
+          "ok": true,
+          "filename": "main.py",
+          "exit_code": 127,
+          "stdout": "",
+          "stderr": "File not found: C:\\Users\\user\\AppData\\Local\\Temp\\eval_ws_goal_1_l1o3_i34\\main.py",
+          "parsed_traceback": {
+            "kind": "unknown",
+            "exception": "<unknown>",
+            "line": null,
+            "snippet": "File not found: C:\\Users\\user\\AppData\\Local\\Temp\\eval_ws_goal_1_l1o3_i34\\main.py",
+            "demands_strategy": "none"
+          },
+          "success": false,
+          "node_id": "F6_exec"
+        },
+        "attempts": 1
+      }
+    ],
+    "metrics": {
+      "elapsed_seconds": 6.69,
+      "tokens_input": 630,
+      "tokens_output": 544,
+      "tokens_total": 1174,
+      "cost_total_usd": 0.002262,
+      "calls": 2,
+      "budget_remaining_tokens": 198826,
+      "budget_remaining_usd": 4.997738,
+      "per_agent": {
+        "orchestrator": {
+          "input_tokens": 630,
+          "output_tokens": 544,
+          "cost_usd": 0.002262,
+          "calls": 2
+        }
+      },
+      "provider_switches": 4,
+      "memory_entries": 26
+    }
+  }
+}

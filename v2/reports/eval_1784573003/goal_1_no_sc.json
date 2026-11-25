@@ -1,0 +1,54 @@
+{
+  "goal_id": "goal_1",
+  "spec": "Write a Python script 'hello.py' that prints 'Hello World'.",
+  "self_correction_enabled": false,
+  "success": false,
+  "steps": 0,
+  "self_corrections": 0,
+  "elapsed_seconds": 0.014597892761230469,
+  "memory_dump": {
+    "run_id": "1294167d-8b3",
+    "goal": {
+      "id": "goal_1",
+      "spec": "Write a Python script 'hello.py' that prints 'Hello World'.",
+      "acceptance": []
+    },
+    "plan_current": [
+      {
+        "id": "S1",
+        "desc": "Write a Python script 'hello.py' that prints 'Hello World'.",
+        "status": "active"
+      }
+    ],
+    "steps": [],
+    "corrections": [],
+    "provider_events": [
+      {
+        "ts": 1784573015.7884457,
+        "from": "openrouter",
+        "to": "next",
+        "reason": "cannot schedule new futures after interpreter shutdown"
+      },
+      {
+        "ts": 1784573015.7884457,
+        "from": "openrouter",
+        "to": "next",
+        "reason": "cannot schedule new futures after interpreter shutdown"
+      },
+      {
+        "ts": 1784573015.7884457,
+        "from": "cohere",
+        "to": "next",
+        "reason": "cannot schedule new futures after interpreter shutdown"
+      }
+    ],
+    "unresolvable": [],
+    "final_output": "Agent crashed during react step: RuntimeError: All providers in tier 'strategic' exhausted. Last error: cannot schedule new futures after interpreter shutdown",
+    "metrics": {
+      "steps": 0,
+      "self_corrections": 0,
+      "provider_switches": 3,
+      "unresolvable_count": 0
+    }
+  }
+}

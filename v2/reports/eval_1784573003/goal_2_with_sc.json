@@ -1,0 +1,54 @@
+{
+  "goal_id": "goal_2",
+  "spec": "Write a Python script 'math_op.py' that calculates the factorial of 10 and prints the result.",
+  "self_correction_enabled": true,
+  "success": false,
+  "steps": 0,
+  "self_corrections": 0,
+  "elapsed_seconds": 0.005372047424316406,
+  "memory_dump": {
+    "run_id": "f942ec65-aa0",
+    "goal": {
+      "id": "goal_2",
+      "spec": "Write a Python script 'math_op.py' that calculates the factorial of 10 and prints the result.",
+      "acceptance": []
+    },
+    "plan_current": [
+      {
+        "id": "S1",
+        "desc": "Write a Python script 'math_op.py' that calculates the factorial of 10 and prints the result.",
+        "status": "active"
+      }
+    ],
+    "steps": [],
+    "corrections": [],
+    "provider_events": [
+      {
+        "ts": 1784573037.299566,
+        "from": "openrouter",
+        "to": "next",
+        "reason": "cannot schedule new futures after interpreter shutdown"
+      },
+      {
+        "ts": 1784573037.299566,
+        "from": "openrouter",
+        "to": "next",
+        "reason": "cannot schedule new futures after interpreter shutdown"
+      },
+      {
+        "ts": 1784573037.299566,
+        "from": "cohere",
+        "to": "next",
+        "reason": "cannot schedule new futures after interpreter shutdown"
+      }
+    ],
+    "unresolvable": [],
+    "final_output": "Agent crashed during react step: RuntimeError: All providers in tier 'strategic' exhausted. Last error: cannot schedule new futures after interpreter shutdown",
+    "metrics": {
+      "steps": 0,
+      "self_corrections": 0,
+      "provider_switches": 3,
+      "unresolvable_count": 0
+    }
+  }
+}

@@ -1,0 +1,31 @@
+# secrets
+.env
+
+# eval artifacts
+eval/reports/
+
+# python
+__pycache__/
+*.py[cod]
+*.so
+.venv/
+dist/
+*.egg-info/
+
+# tooling
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+.vercel
+.env*
+project_analysis.md

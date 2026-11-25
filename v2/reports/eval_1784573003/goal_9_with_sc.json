@@ -1,0 +1,54 @@
+{
+  "goal_id": "goal_9",
+  "spec": "Use the SpecCheckTool to check the specification against the generated files. Wait, just write a file 'spec.md' with the content '# Project Spec'.",
+  "self_correction_enabled": true,
+  "success": false,
+  "steps": 0,
+  "self_corrections": 0,
+  "elapsed_seconds": 0.003936290740966797,
+  "memory_dump": {
+    "run_id": "93c320aa-d9f",
+    "goal": {
+      "id": "goal_9",
+      "spec": "Use the SpecCheckTool to check the specification against the generated files. Wait, just write a file 'spec.md' with the content '# Project Spec'.",
+      "acceptance": []
+    },
+    "plan_current": [
+      {
+        "id": "S1",
+        "desc": "Use the SpecCheckTool to check the specification against the generated files. Wait, just write a file 'spec.md' with the content '# Project Spec'.",
+        "status": "active"
+      }
+    ],
+    "steps": [],
+    "corrections": [],
+    "provider_events": [
+      {
+        "ts": 1784573138.3428447,
+        "from": "openrouter",
+        "to": "next",
+        "reason": "cannot schedule new futures after interpreter shutdown"
+      },
+      {
+        "ts": 1784573138.3428447,
+        "from": "openrouter",
+        "to": "next",
+        "reason": "cannot schedule new futures after interpreter shutdown"
+      },
+      {
+        "ts": 1784573138.3428447,
+        "from": "cohere",
+        "to": "next",
+        "reason": "cannot schedule new futures after interpreter shutdown"
+      }
+    ],
+    "unresolvable": [],
+    "final_output": "Agent crashed during react step: RuntimeError: All providers in tier 'strategic' exhausted. Last error: cannot schedule new futures after interpreter shutdown",
+    "metrics": {
+      "steps": 0,
+      "self_corrections": 0,
+      "provider_switches": 3,
+      "unresolvable_count": 0
+    }
+  }
+}
