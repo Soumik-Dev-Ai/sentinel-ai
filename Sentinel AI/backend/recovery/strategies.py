@@ -1,7 +1,11 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from collections.abc import Callable
-from datetime import UTC, datetime
+try:
+    from datetime import UTC, datetime
+except ImportError:
+    from datetime import datetime, timezone
+    UTC = timezone.utc
 from typing import Any
 
 from backend import config

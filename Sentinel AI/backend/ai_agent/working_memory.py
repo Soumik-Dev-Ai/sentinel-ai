@@ -1,11 +1,20 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import hashlib
 import json
 import uuid
 from dataclasses import dataclass, field
-from datetime import UTC, datetime
-from enum import StrEnum
+try:
+    from datetime import UTC, datetime
+except ImportError:
+    from datetime import datetime, timezone
+    UTC = timezone.utc
+try:
+    from enum import StrEnum
+except ImportError:
+    from enum import Enum
+    class StrEnum(str, Enum):
+        pass
 from pathlib import Path
 from typing import Any
 
