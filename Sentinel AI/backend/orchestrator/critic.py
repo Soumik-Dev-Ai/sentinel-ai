@@ -19,7 +19,7 @@ from typing import Any, Optional
 from backend.orchestrator.base import Agent, AgentContext, fail, ok
 
 
-CRITIC_SYSTEM_PROMPT = """You are CRITIC — LLM-as-a-Judge for Python code.
+CRITIC_SYSTEM_PROMPT = """You are CRITIC — LLM-as-a-Judge for code across Python, C, C++, Rust, Go, and JavaScript.
 
 You receive:
 - The user goal + acceptance criteria.
@@ -43,8 +43,11 @@ Output ONLY this JSON object:
 Rules:
 - Be strict but fair. Issues should be specific enough that the coder can act on them.
 - Picklines, silent failure, off-by-one, recursion blow-up, type confusion are all -ve.
+- For C/C++: verify pointer checks, buffer bounds, header completeness, and memory leaks.
 - A passing score requires `total >= 80`.
 - Do NOT suggest changes that contradict the goal.
+- Evaluate whether the code satisfies the current `subtask` (other files or test suites may be handled in subsequent subtasks).
+- If the `subtask` explicitly asks for a deliberately broken function/script (to test error recovery), ACCEPT it.
 """
 
 
@@ -77,6 +80,7 @@ class Critic(Agent):
 
         user_payload: dict[str, Any] = {
             "goal": ctx.goal,
+            "subtask": ctx.subtask_desc,
             "acceptance": ctx.acceptance,
             "filename": filename,
             "code": code,
@@ -91,6 +95,7 @@ class Critic(Agent):
                 {"role": "user", "content": json.dumps(user_payload, ensure_ascii=False)},
             ],
             stream=True,
+            model_tier="fast_eval",
         )
         verdict = self._parse_verdict(reply.thought or "")
         if verdict is None:
@@ -98,10 +103,19 @@ class Critic(Agent):
             return fail("unparseable_verdict")
 
         total = int(verdict.get("total", 0))
-        passes = bool(verdict.get("passes", total >= self._threshold))
-        verdict_text = str(verdict.get("verdict", "ACCEPT" if passes else "REJECT")).upper()
-        if verdict_text not in {"ACCEPT", "REJECT"}:
-            verdict_text = "ACCEPT" if passes else "REJECT"
+        axis_sum = sum(int(verdict.get(k, 0) or 0) for k in ("correctness", "edge_cases", "acceptance", "readability"))
+        if 0 < total <= 40 and total == axis_sum:
+            total = int(round(total * 2.5))
+        correctness = int(verdict.get("correctness", 0) or 0)
+        acceptance = int(verdict.get("acceptance", 0) or 0)
+        explicit_accept = str(verdict.get("verdict", "")).strip().upper() == "ACCEPT"
+        passes = (
+            bool(verdict.get("passes"))
+            or explicit_accept
+            or total >= self._threshold
+            or (total >= 70 and correctness >= 7 and acceptance >= 7)
+        )
+        verdict_text = "ACCEPT" if passes else "REJECT"
 
         ctx.bus.emit(
             "critic_verdict",

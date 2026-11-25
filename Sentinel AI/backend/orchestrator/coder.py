@@ -17,7 +17,7 @@ from typing import Any, Optional
 from backend.orchestrator.base import Agent, AgentContext, fail, ok
 
 
-CODER_SYSTEM_PROMPT = """You are CODER, a specialist agent that writes clean, runnable, idiomatic Python 3.12+ code.
+CODER_SYSTEM_PROMPT = """You are CODER, a specialist agent that writes clean, runnable, idiomatic code across Python, C, C++, Rust, Go, or JavaScript.
 
 You will receive:
 - A user goal and acceptance criteria.
@@ -43,7 +43,10 @@ Rules:
 - Use only standard-library modules unless the goal requires otherwise.
 - Include docstrings for public functions + 2-4 inline comments.
 - If the subtask cannot be implemented safely, return empty `code` and a non-empty `rationale`.
-- Set `filename` to a path-safe snake_case identifier ending in `.py`.
+- Set `filename` and `language` matching the target language (e.g. `main.c` / `c`, `main.cpp` / `cpp`, `main.rs` / `rust`, `main.go` / `go`, `main.js` / `javascript`, or `.py` / `python`). Default to python if unspecified.
+- For compiled languages (C, C++, Rust, Go): include complete headers/imports, check NULL on allocations, free heap memory, and provide a self-contained `main()` test harness with assertions exiting 0 on success.
+- Do NOT use banned safety patterns (`subprocess`, `os.system`, `os.remove`, `os.rmdir`, `shutil.rmtree`, `__import__`, `ctypes`, `socket`, `multiprocessing`, `signal`). To execute another `.py` file, import it or use `runpy.run_path`.
+- If `recent_failures` is provided (self-correction retry), fix the root cause so the script runs cleanly and exits with code 0 (e.g. if an input file like `data.csv`, `essay.txt`, or `users.json` is missing, generate a valid sample file automatically if `not os.path.exists(...)`; if a prior attempt had an intentional error that the goal asked to observe first and then fix, output the FIXED working code now).
 """
 
 
@@ -98,12 +101,27 @@ class Coder(Agent):
         parsed = self._parse_coder_reply(reply.thought or "")
         if not parsed:
             self.update_graph_node(ctx, node_id, status="error")
-            ctx.bus.emit("error", message="Coder produced unparseable output")
+            ctx.bus.emit(
+                "terminal_line",
+                text=f"[CODER] Attempt {attempt} unparseable; triggering self-correction retry...",
+                line_type="recovery",
+            )
             return fail("unparseable_output")
 
         filename = str(parsed.get("filename") or file_hint).strip() or file_hint
         code = str(parsed.get("code") or "")
         rationale = str(parsed.get("rationale") or "")
+        if "\\n" in code:
+            try:
+                import ast
+                ast.parse(code)
+            except SyntaxError:
+                fixed = code.replace("\\\n", "\n").replace("\\n", "\n").replace('\"', '"').replace("\'", "'")
+                try:
+                    ast.parse(fixed)
+                    code = fixed
+                except SyntaxError:
+                    pass
 
         if not code.strip():
             self.update_graph_node(ctx, node_id, status="error")
@@ -140,48 +158,102 @@ class Coder(Agent):
 
     # ---------- parser ----------
 
+    @staticmethod
+    def _infer_fname_lang(detected_tag: str, code_body: str) -> tuple[str, str]:
+        ext_map = {
+            "c": (".c", "c"), "cpp": (".cpp", "cpp"), "c++": (".cpp", "cpp"),
+            "rust": (".rs", "rust"), "rs": (".rs", "rust"),
+            "go": (".go", "go"), "golang": (".go", "go"),
+            "javascript": (".js", "javascript"), "js": (".js", "javascript"),
+            "node": (".js", "javascript"), "python": (".py", "python"), "py": (".py", "python"),
+        }
+        if detected_tag in ext_map:
+            ext, lang = ext_map[detected_tag]
+            return f"main{ext}", lang
+        if "#include" in code_body:
+            return "main.c", "c"
+        if "package main" in code_body:
+            return "main.go", "go"
+        if "fn main" in code_body:
+            return "main.rs", "rust"
+        return "main.py", "python"
+
     def _parse_coder_reply(self, text: str) -> Optional[dict[str, Any]]:
-        # try direct JSON
+        if not text:
+            return None
+        # 1. try direct JSON
         s = self._strip_fence(text)
         try:
-            return json.loads(s)
+            candidate = json.loads(s)
+            if isinstance(candidate, dict) and "code" in candidate:
+                return candidate
         except Exception:
             pass
+        # 2. search for outer { ... }
         m = re.search(r"\{.*\}", text, re.DOTALL)
         if m:
             try:
-                return json.loads(m.group(0))
+                candidate = json.loads(m.group(0))
+                if isinstance(candidate, dict) and "code" in candidate:
+                    return candidate
             except Exception:
                 pass
-        # aggressive fallback: if the LLM outputted broken JSON with literal newlines in the "code" field, extract it
-        code_m = re.search(r'"code":\s*"(.*?)"\s*(?:,\s*"self_check"|\}$)', text, re.DOTALL)
+        # 3. aggressive fallback: broken JSON with unescaped newlines in "code"
+        code_m = re.search(r'"code"\s*:\s*"(.*?)"\s*(?:,\s*"(?:self_check|rationale|filename|language)"|\s*\})', s, re.DOTALL)
         if code_m:
             raw_code = code_m.group(1)
-            # LLMs sometimes escape quotes or newlines inconsistently when they break JSON formatting
             raw_code = raw_code.replace('\\n', '\n').replace('\\"', '"').replace('\\\\', '\\')
-            
-            # Extract filename if possible
-            filename_m = re.search(r'"filename":\s*"([^"]+)"', text)
-            fname = filename_m.group(1) if filename_m else "generated.py"
-            
+            filename_m = re.search(r'"filename"\s*:\s*"([^"]+)"', s)
+            fname = filename_m.group(1) if filename_m else "main.py"
+            ext = fname.rsplit(".", 1)[-1].lower() if "." in fname else "py"
+            _, lang = self._infer_fname_lang(ext, raw_code)
             return {
                 "rationale": "Extracted via broken JSON regex fallback",
                 "filename": fname,
-                "language": "python",
+                "language": lang,
                 "code": raw_code,
                 "self_check": {"handles_edge_cases": True, "covers_acceptance": True},
             }
         
-        # secondary regex fallback: extract code from markdown python block if they just ignored JSON
-        code_m = re.search(r"(?s)```python\n(.*?)\n```", text)
-        if code_m:
+        # 4. JSON with markdown code block inside "code": ```lang ... ```
+        inside_fence = re.search(r'"code"\s*:\s*```(?P<lang>[a-zA-Z0-9_\+\-]+)?\s*\n(?P<code>.*?)\n```', text, re.DOTALL)
+        if inside_fence:
+            code_body = inside_fence.group("code")
+            detected_tag = (inside_fence.group("lang") or "").lower()
+            fname, lang = self._infer_fname_lang(detected_tag, code_body)
             return {
-                "rationale": "Extracted via markdown regex fallback",
-                "filename": "generated.py",
-                "language": "python",
-                "code": code_m.group(1),
+                "rationale": "Extracted from markdown-in-json fence",
+                "filename": fname,
+                "language": lang,
+                "code": code_body,
                 "self_check": {"handles_edge_cases": True, "covers_acceptance": True},
             }
+
+        # 5. secondary regex fallback: extract code from markdown block for any language
+        poly_m = re.search(r"(?s)```(?P<lang>[a-zA-Z0-9_\+\-]+)?\s*\n(?P<code>.*?)\n```", text)
+        if poly_m:
+            detected_tag = (poly_m.group("lang") or "").lower()
+            code_body = poly_m.group("code")
+            fname, lang = self._infer_fname_lang(detected_tag, code_body)
+            return {
+                "rationale": "Extracted via markdown regex fallback",
+                "filename": fname,
+                "language": lang,
+                "code": code_body,
+                "self_check": {"handles_edge_cases": True, "covers_acceptance": True},
+            }
+
+        # 6. Raw code fallback if LLM omitted markdown fences
+        for kw in ("def ", "import ", "#include", "package main", "fn main", "function ", "class "):
+            if kw in text:
+                fname, lang = self._infer_fname_lang("", text)
+                return {
+                    "rationale": "Extracted raw code",
+                    "filename": fname,
+                    "language": lang,
+                    "code": text.strip(),
+                    "self_check": {"handles_edge_cases": True, "covers_acceptance": True},
+                }
         return None
 
     @staticmethod
