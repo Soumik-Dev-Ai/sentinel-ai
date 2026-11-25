@@ -140,11 +140,27 @@ class MemoryEntry:
 # Vector Store
 # -----------------------------------------------------------------------------
 
-class VectorStore:
-    """Persistent FAISS (or pure-numpy fallback) vector store.
+_MEMORIES_SCHEMA = f"""
+CREATE TABLE IF NOT EXISTS memories (
+    id TEXT PRIMARY KEY,
+    kind TEXT NOT NULL,
+    goal TEXT NOT NULL,
+    summary TEXT NOT NULL,
+    error_signature TEXT,
+    strategy TEXT,
+    success INTEGER NOT NULL DEFAULT 1,
+    created_ts REAL NOT NULL,
+    metadata TEXT NOT NULL DEFAULT '{{}}',
+    embedding F32_BLOB({_EMBED_DIM})
+)
+"""
 
-    Thread-safe. Falls back to an in-memory numpy brute-force index if FAISS
-    is not installed — keeps the same API for callers.
+
+class VectorStore:
+    """Persistent FAISS + Turso libSQL (or pure-numpy fallback) vector store.
+
+    Thread-safe. Syncs with Turso when TURSO_DATABASE_URL + TURSO_AUTH_TOKEN are set
+    and persist_dir is provided; falls back cleanly to local disk / FAISS / numpy.
     """
 
     def __init__(self, persist_dir: Optional[Path] = None, dim: int = _EMBED_DIM):
@@ -153,6 +169,7 @@ class VectorStore:
         self._persist_dir = Path(persist_dir) if persist_dir else None
         if self._persist_dir:
             self._persist_dir.mkdir(parents=True, exist_ok=True)
+        self._turso_ready = False
         self._entries: list[MemoryEntry] = []
         self._vectors: np.ndarray = np.zeros((0, dim), dtype=np.float32)
         self._index: Any = None  # faiss.IndexFlatIP | None
@@ -163,12 +180,48 @@ class VectorStore:
 
     # ---------------- Persistence ----------------
 
+    def _ensure_turso(self) -> bool:
+        if self._persist_dir is None:
+            return False
+        from backend.db import turso
+        if not turso.is_configured():
+            return False
+        if not self._turso_ready:
+            turso.execute(_MEMORIES_SCHEMA)
+            self._turso_ready = True
+        return True
+
     def _entries_path(self) -> Optional[Path]:
         if self._persist_dir is None:
             return None
         return self._persist_dir / "memories.json"
 
     def _load(self) -> None:
+        try:
+            if self._ensure_turso():
+                from backend.db import turso
+                rows = turso.execute(
+                    "SELECT id, kind, goal, summary, error_signature, strategy, success, created_ts, metadata "
+                    "FROM memories ORDER BY created_ts ASC"
+                )
+                self._entries = [
+                    MemoryEntry(
+                        id=r["id"],
+                        kind=r["kind"],
+                        goal=r["goal"],
+                        summary=r["summary"],
+                        error_signature=r.get("error_signature"),
+                        strategy=r.get("strategy"),
+                        success=bool(r.get("success", 1)),
+                        created_ts=float(r.get("created_ts") or 0.0),
+                        metadata=json.loads(r.get("metadata") or "{}"),
+                    )
+                    for r in rows
+                ]
+                return
+        except Exception:
+            pass
+
         path = self._entries_path()
         if path is None or not path.exists():
             return
@@ -261,6 +314,33 @@ class VectorStore:
             if self._index is not None and faiss is not None and vec.shape[0] > 0:
                 self._index.add(vec)  # type: ignore[arg-type]
             self._persist()
+            try:
+                if self._ensure_turso():
+                    from backend.db import turso
+                    emb = (
+                        vec.reshape(-1)
+                        if vec.shape[1] == self._dim
+                        else _local_embed(self._entry_text(entry), self._dim)
+                    )
+                    turso.execute(
+                        "INSERT OR IGNORE INTO memories "
+                        "(id, kind, goal, summary, error_signature, strategy, success, created_ts, metadata, embedding) "
+                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, vector32(?))",
+                        [
+                            entry.id,
+                            entry.kind,
+                            entry.goal,
+                            entry.summary,
+                            entry.error_signature,
+                            entry.strategy,
+                            int(entry.success),
+                            entry.created_ts,
+                            json.dumps(entry.metadata, default=str),
+                            json.dumps([round(float(x), 6) for x in emb]),
+                        ],
+                    )
+            except Exception:
+                pass
             return entry
 
     def query_closest(
@@ -275,6 +355,50 @@ class VectorStore:
         `kind` filters by solved/errors (None means all).
         """
         with self._lock:
+            try:
+                if self._ensure_turso():
+                    from backend.db import turso
+                    qv_local = _local_embed(query, self._dim)
+                    vec_json = json.dumps([round(float(x), 6) for x in qv_local])
+                    if kind is not None:
+                        rows = turso.execute(
+                            "SELECT id, kind, goal, summary, error_signature, strategy, success, created_ts, metadata, "
+                            "(1.0 - vector_distance_cos(embedding, vector32(?))) AS sim "
+                            "FROM memories WHERE kind = ? AND embedding IS NOT NULL "
+                            "ORDER BY sim DESC LIMIT ?",
+                            [vec_json, kind, k],
+                        )
+                    else:
+                        rows = turso.execute(
+                            "SELECT id, kind, goal, summary, error_signature, strategy, success, created_ts, metadata, "
+                            "(1.0 - vector_distance_cos(embedding, vector32(?))) AS sim "
+                            "FROM memories WHERE embedding IS NOT NULL "
+                            "ORDER BY sim DESC LIMIT ?",
+                            [vec_json, k],
+                        )
+                    pairs = []
+                    for r in rows:
+                        sc = float(r.get("sim") or 0.0)
+                        if sc < min_score:
+                            continue
+                        pairs.append((
+                            MemoryEntry(
+                                id=r["id"],
+                                kind=r["kind"],
+                                goal=r["goal"],
+                                summary=r["summary"],
+                                error_signature=r.get("error_signature"),
+                                strategy=r.get("strategy"),
+                                success=bool(r.get("success", 1)),
+                                created_ts=float(r.get("created_ts") or 0.0),
+                                metadata=json.loads(r.get("metadata") or "{}"),
+                            ),
+                            sc,
+                        ))
+                    return pairs
+            except Exception:
+                pass
+
             if not self._entries:
                 return []
             qv = embed_text(query).reshape(1, -1)
