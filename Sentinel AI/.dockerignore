@@ -1,0 +1,16 @@
+.git
+.venv
+.env
+.env.local
+__pycache__
+*.py[cod]
+.pytest_cache
+.ruff_cache
+.coverage
+frontend/node_modules
+reports
+local_test_report
+test_report
+test_report2
+*.log
+*.pid

@@ -102,11 +102,14 @@ async def ws_run(websocket: WebSocket) -> None:
     terminal_logs: list[str] = []
     errors: list[str] = []
 
-    loop = asyncio.get_event_loop()
+    loop = asyncio.get_running_loop()
 
     def _q(event: dict[str, Any]) -> None:
         event_deque.append(event)
-        event_avail.set()
+        try:
+            loop.call_soon_threadsafe(event_avail.set)
+        except Exception:
+            event_avail.set()
 
     def _bus_to_deque(event_dict: dict[str, Any]) -> None:
         # event_dict is already a serializable dict (AgentEvent.to_dict())
@@ -177,7 +180,8 @@ async def ws_run(websocket: WebSocket) -> None:
     _escalation_manager = GLOBAL_ESCALATION_MANAGER  # fallback
 
     if mode in ("multi", "multi-v2"):
-        pipeline = MultiAgentPipeline(bus=bus)
+        pipe_router = getattr(app.state, "router", None)
+        pipeline = MultiAgentPipeline(router=pipe_router, bus=bus)
         _escalation_manager = pipeline.active_escalation
 
         # Subscribe to events BEFORE starting the worker.
@@ -332,7 +336,10 @@ async def ws_run(websocket: WebSocket) -> None:
     async def _drain_outgoing() -> None:
         sent_completed = False
         while True:
-            await event_avail.wait()
+            try:
+                await asyncio.wait_for(event_avail.wait(), timeout=0.1)
+            except asyncio.TimeoutError:
+                pass
             event_avail.clear()
             while event_deque:
                 ev = event_deque.popleft()
@@ -399,6 +406,11 @@ async def ws_run(websocket: WebSocket) -> None:
 
 EVAL_DIR = Path("reports")
 EVAL_STATE_FILE = EVAL_DIR / "eval_state.json"
+
+@app.get("/health")
+@app.get("/api/health")
+def health() -> dict[str, str]:
+    return {"status": "ok", "version": "2.0"}
 
 def get_shared_eval_state():
     if EVAL_STATE_FILE.exists():
@@ -510,8 +522,25 @@ def get_evaluation(run_name: str) -> dict[str, Any]:
     except Exception as e:
         return {"error": str(e)}
 
+@app.get("/api/providers/health")
+def get_providers_health(active: bool = False) -> dict[str, Any]:
+    router = getattr(app.state, "router", None)
+    if router is None:
+        router = LLMRouter()
+        app.state.router = router
+    return router.probe_providers(active=active)
+
+
 @app.get('/api/history')
 def get_run_history(limit: int = 50, offset: int = 0) -> list[dict[str, Any]]:
     from backend.db.store import list_runs
     return list_runs(limit=limit, offset=offset)
+
+
+# Serve static frontend if built (single-container deployment)
+frontend_dist = Path(__file__).resolve().parent.parent.parent / "frontend" / "dist"
+if frontend_dist.exists():
+    from starlette.staticfiles import StaticFiles
+    app.mount("/", StaticFiles(directory=str(frontend_dist), html=True), name="frontend")
+
 

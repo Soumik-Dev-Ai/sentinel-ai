@@ -13,6 +13,7 @@ pyyaml>=6.0
 python-dotenv>=1.0
 fastapi>=0.115
 uvicorn[standard]>=0.32
+gradio>=5.0
 
 # Multi-agent + memory (Sentinel AI 2.0)
 numpy>=1.26                    # FAISS vector math
