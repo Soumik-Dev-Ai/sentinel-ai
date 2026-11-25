@@ -165,19 +165,21 @@ class Agent:
         messages: list[dict[str, Any]],
         tools: Optional[list[dict[str, Any]]] = None,
         stream: bool = True,
+        model_tier: Optional[str] = None,
     ) -> Reply:
         """Wrap router.chat with telemetry + cost tracking."""
         from backend.telemetry.tracing import agent_span
+        tier = model_tier or ctx.model_tier
         with agent_span(
             self.name,
             subtask_id=ctx.subtask_id,
-            model_tier=ctx.model_tier,
+            model_tier=tier,
         ) as span:
             reply = ctx.router.chat(
                 messages,
                 tools=tools,
                 stream_callback=(self._make_stream_cb(ctx) if stream else None),
-                model_tier=ctx.model_tier,
+                model_tier=tier,
             )
             # Use the router's tracked last-successful provider/model (streaming
             # providers frequently return empty usage dicts, so we rely on the

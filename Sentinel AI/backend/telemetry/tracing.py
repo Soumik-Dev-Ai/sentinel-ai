@@ -7,6 +7,7 @@ to ship to Jaeger/Grafana Tempo).
 from __future__ import annotations
 
 import functools
+import os
 import time
 from contextlib import contextmanager
 from typing import Any, Generator
@@ -18,9 +19,10 @@ from opentelemetry.sdk.trace.export import (
     ConsoleSpanExporter,
 )
 
-# One-time init
+# One-time init — console export only when explicitly requested (OTEL_EXPORTER=console).
 _provider = TracerProvider()
-_provider.add_span_processor(BatchSpanProcessor(ConsoleSpanExporter()))
+if os.getenv("OTEL_EXPORTER", "").lower() == "console":
+    _provider.add_span_processor(BatchSpanProcessor(ConsoleSpanExporter()))
 trace.set_tracer_provider(_provider)
 
 tracer = trace.get_tracer("sentinel_ai", "2.0.0")

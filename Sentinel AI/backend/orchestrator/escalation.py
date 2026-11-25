@@ -26,7 +26,7 @@ from backend.orchestrator.base import AgentContext
 
 
 ESCALATION_THRESHOLD = 0.50      # confidence < 0.5
-ESCALATION_MAX_ATTEMPTS = 2     # >=2 self-corrections on same subtask
+ESCALATION_MAX_ATTEMPTS = 4     # >=4 self-corrections on same subtask (do not interrupt early)
 ESCALATION_TIMEOUT_SECONDS = 300  # if the user doesn't answer in 5 minutes, give up
 
 

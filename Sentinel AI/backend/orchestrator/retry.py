@@ -69,12 +69,12 @@ _CATEGORY_TO_STRATEGY = {
 # -----------------------------------------------------------------------------
 
 # Heuristic exception-class lists.
-_SYNTAX_ERRORS = {"SyntaxError", "IndentationError", "TabError", "TokenError"}
+_SYNTAX_ERRORS = {"SyntaxError", "IndentationError", "TabError", "TokenError", "CompileError"}
 _LOGIC_ERRORS = {
     "AssertionError", "ValueError", "TypeError", "IndexError", "KeyError",
     "ZeroDivisionError", "AttributeError", "NameError", "UnboundLocalError",
     "RecursionError", "StopIteration", "NotImplementedError", "ArithmeticError",
-    "LookupError", "ReferenceError",
+    "LookupError", "ReferenceError", "SegmentationFault",
 }
 _EXTERNAL_ERRORS = {
     "TimeoutError", "ConnectionError", "ConnectionRefusedError",
@@ -194,6 +194,17 @@ class RetryRouter:
 
     @staticmethod
     def _build_guidance(strategy: Strategy, f: Failure, attempt: int) -> str:
+        if f.exception == "CompileError":
+            loc = f"at line {f.line}" if f.line else "in code"
+            return (
+                f"Compilation error {loc}. Fix compiler diagnostic: "
+                f"missing header/semicolon, mismatched type, or undefined symbol.\n{f.stderr[:800]}"
+            )
+        if f.exception == "SegmentationFault":
+            return (
+                f"Memory safety violation (SIGSEGV). Check NULL pointer checks, "
+                f"buffer boundaries, string null-termination, or heap allocation.\n{f.stderr[:800]}"
+            )
         if strategy == Strategy.LINE_PATCH:
             loc = f"at or near line {f.line}" if f.line else "in the file"
             return (
